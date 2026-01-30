@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+
+}
+
+model cars {
+  id Int @id @default(autoincrement())
+  license_plate String   @db.VarChar(20)
+  make      String   @db.VarChar(255)
+  model     String   @db.VarChar(255)
+  price     Decimal @db.Decimal(10, 2)
+  mileage   Int 
+  seats     Int? 
+  doors     Int?
+  production_year Int?
+  weight    Int?
+  color           String?   @db.VarChar(100)
+  image           String?   @db.VarChar(500)
+  sold_at         DateTime? @db.Timestamp(6)
+  views         Int       @default(0)
+  updated_at    DateTime  @updatedAt @db.Timestamp(6)
+  created_at    DateTime  @default(now()) @db.Timestamp(6)
+  car_tags      car_tag[]
+}
+
+model users{
+  id Int @id @default(autoincrement())
+  name     String   @db.VarChar(255)
+  email   String   @unique @db.VarChar(255)
+  password String   @db.VarChar(255)
+  remember_token String? @db.VarChar(100)
+  phone_number String? @db.VarChar(20)
+  created_at    DateTime  @default(now()) @db.Timestamp(6)
+  updated_at    DateTime  @updatedAt @db.Timestamp(6)
+}
+
+model tags{
+  id Int @id @default(autoincrement())
+  name     String   @db.VarChar(100) 
+  color    String   @db.VarChar(20)
+  car_tags car_tag[]
+}
+
+model car_tag {
+  tag_id Int
+  car_id Int
+  
+  car    cars @relation(fields: [car_id], references: [id], onDelete: Cascade)
+  tag    tags @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+  
+  @@id([car_id, tag_id])
+  @@index([tag_id])
+}
