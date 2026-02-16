@@ -3,6 +3,7 @@
 import { useState } from "react";
 import BlurText from "../../components/BlurText";
 import PillNav from '../../components/PillNav';
+import FloatingLines from '../../components/FloatingLines';
 
 const handleAnimationComplete = () => {
   console.log('Animation completed!');
@@ -78,6 +79,20 @@ export default function SellCarForm() {
 
   return (
     <>
+    <div style={{ width: '100%', height: '600px', position: 'relative' }} className="fixed top-0 left-0 w-screen h-screen -z-10">
+      <FloatingLines 
+        enabledWaves={["top","middle","bottom"]}
+        // Array - specify line count per wave; Number - same count for all waves
+        lineCount={5}
+        // Array - specify line distance per wave; Number - same distance for all waves
+        lineDistance={5}
+        bendRadius={5}
+        bendStrength={-0.5}
+        interactive={true}
+        parallax={true}
+      />
+    </div>
+    
       <header>
         <div className="flex justify-center gap-8 mt-20">
           <PillNav
@@ -202,7 +217,7 @@ export default function SellCarForm() {
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
             className="w-full p-2 border rounded"
-          />  
+          />    
 
           <button type="submit" className="bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 w-full">
             Auto toevoegen

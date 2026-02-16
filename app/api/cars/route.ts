@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/app/lib/prisma';
 
 export async function POST(request: Request) {
   try {
@@ -9,28 +7,26 @@ export async function POST(request: Request) {
     
     console.log('Ontvangen data:', body); 
     
-    // Validatie
-    if (!body.make || !body.model) {
+    if (!body.make || !body.model || !body.license_plate) {
       return NextResponse.json(
-        { error: 'Merk en model zijn verplicht' },
+        { error: 'Merk, model en kenteken zijn verplicht' },
         { status: 400 }
       );
     }
 
-    // Auto aanmaken in database
     const newCar = await prisma.cars.create({
       data: {
+        license_plate: body.license_plate,
+        make: body.make,
+        model: body.model,
         price: parseFloat(body.price) || 0,
         mileage: body.mileage ? parseInt(body.mileage) : 0,
         color: body.color || null,
         doors: body.doors ? parseInt(body.doors) : null,
         image: body.image || null,
-        license_plate: body.license_plate || null,
-        make: body.make,
-        model: body.model,
         production_year: body.production_year ? parseInt(body.production_year) : null,
         seats: body.seats ? parseInt(body.seats) : null,
-        weight: body.weight ? parseFloat(body.weight) : null,
+        weight: body.weight ? parseInt(body.weight) : null,
       },
     });
 
@@ -41,10 +37,22 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json(
-      { error: `Database fout: ${error}` },
+      { error: `Database fout: ${error instanceof Error ? error.message : 'Onbekende fout'}` },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
+  }
+}
+
+export async function GET() {
+  try {
+    const cars = await prisma.cars.findMany({
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+    return NextResponse.json(cars);
+  } catch (error) {
+    console.error('Database error:', error);
+    return NextResponse.json({ error: 'Fout bij ophalen auto\'s' }, { status: 500 });
   }
 }
