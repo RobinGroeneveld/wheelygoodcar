@@ -4,6 +4,15 @@ import { useState } from "react";
 import { signIn } from "@/app/lib/auth-client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import FloatingLines from "@/components/FloatingLines";
+import PillNav from "@/components/PillNav";
+
+const NAV_ITEMS = [
+  { label: 'Home', href: '/' },
+  { label: 'Auto verkopen', href: '/sell-car' },
+  { label: "Overzicht alle auto's", href: '/overview' },
+  { label: 'Inloggen', href: '/login' },
+];
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -18,11 +27,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signIn.email({
-        email,
-        password,
-      });
-      router.push("/");
+      await signIn.email({ email, password });
+      router.push("/overview");
     } catch (err) {
       setError("Login mislukt. Controleer je gegevens.");
       console.error(err);
@@ -32,68 +38,83 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <div>
-          <h2 className="text-center text-3xl font-bold text-gray-900">
-            Inloggen
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
+    <>
+      <div className="fixed top-0 left-0 w-screen h-screen -z-10">
+        <FloatingLines
+          enabledWaves={["top", "middle", "bottom"]}
+          lineCount={5}
+          lineDistance={5}
+          bendRadius={5}
+          bendStrength={-0.5}
+          interactive={true}
+          parallax={true}
+        />
+      </div>
+
+      <div className="min-h-screen flex flex-col">
+        <header className="pt-8">
+          <div className="flex justify-center">
+            <PillNav
+              items={NAV_ITEMS}
+              activeHref="/login"
+              ease="power2.easeOut"
+              baseColor="#000000"
+              pillColor="#ffffff"
+              hoveredPillTextColor="#ffffff"
+              pillTextColor="#000000"
+              initialLoadAnimation={false}
+            />
+          </div>
+        </header>
+
+        <div className="flex-1 flex items-center justify-center">
+          <form onSubmit={handleSubmit} className="max-w-sm w-full p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-xl space-y-4">
+            <h2 className="text-2xl font-bold text-white">Inloggen</h2>
+
+            {error && (
+              <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/30 px-3 py-2 rounded-lg">
+                {error}
+              </p>
+            )}
+
+            <div className="space-y-3">
               <input
-                id="email"
-                name="email"
                 type="email"
-                required
+                placeholder="E-mailadres"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Wachtwoord
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
+                className="w-full p-2 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400"
                 required
+              />
+              <input
+                type="password"
+                placeholder="Wachtwoord"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400"
+                required
               />
             </div>
-          </div>
 
-          <div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-white py-2 rounded-xl font-semibold transition-all"
             >
               {loading ? "Bezig met inloggen..." : "Inloggen"}
             </button>
-          </div>
 
-          <div className="text-center text-sm">
-            <span className="text-gray-600">Nog geen account? </span>
-            <Link href="/register" className="text-blue-600 hover:text-blue-500">
-              Registreer hier
-            </Link>
-          </div>
-        </form>
+            <p className="text-center text-gray-400 text-sm">
+              Nog geen account?{" "}
+              <Link href="/register" className="text-cyan-400 hover:underline">
+                Registreer hier
+              </Link>
+            </p>
+            
+          </form>
+          
+        </div>
       </div>
-    </div>
+    </>
   );
 }

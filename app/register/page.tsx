@@ -20,16 +20,21 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await signUp.email({
+      const result = await signUp.email({
         email,
         password,
         name,
         phoneNumber,
       });
-      router.push("/");
+      console.log('Registratie resultaat:', result);
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        router.push("/");
+      }
     } catch (err) {
       setError("Registratie mislukt. Probeer het opnieuw.");
-      console.error(err);
+      console.error('Registratie error:', err);
     } finally {
       setLoading(false);
     }

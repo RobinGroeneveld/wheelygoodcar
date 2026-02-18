@@ -469,17 +469,16 @@ export default function FloatingLines({
     parallaxStrength
   ]);
 
-  return (
+ return (
   <div 
     ref={containerRef} 
     style={{ 
       width: '100%', 
-      height: '150%',  // ← Maak hoger
+      height: '100%',
       position: 'absolute',
-      top: '-25%',  // ← Verschuif omhoog
+      top: 0,
       left: 0,
       touchAction: 'none',
-      zIndex: -1
     }}
   />
 );

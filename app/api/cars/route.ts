@@ -1,19 +1,24 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import { auth } from '@/app/lib/auth';
 
 export async function POST(request: Request) {
+  // Haal cookies op uit request
+  const cookies = request.headers.get('cookie') || '';
+  // Haal sessie op via Better Auth
+  const session = await auth.getSession({ cookie: cookies });
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Je moet ingelogd zijn om een auto aan te maken.' }, { status: 401 });
+  }
   try {
     const body = await request.json();
-    
     console.log('Ontvangen data:', body); 
-    
     if (!body.make || !body.model || !body.license_plate) {
       return NextResponse.json(
         { error: 'Merk, model en kenteken zijn verplicht' },
         { status: 400 }
       );
     }
-
     const newCar = await prisma.cars.create({
       data: {
         license_plate: body.license_plate,
@@ -27,9 +32,9 @@ export async function POST(request: Request) {
         production_year: body.production_year ? parseInt(body.production_year) : null,
         seats: body.seats ? parseInt(body.seats) : null,
         weight: body.weight ? parseInt(body.weight) : null,
+        userId: session.user.id,
       },
     });
-
     return NextResponse.json(
       { message: 'Auto succesvol aangemaakt!', car: newCar },
       { status: 201 }
@@ -43,9 +48,15 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const cookies = request.headers.get('cookie') || '';
+  const session = await auth.getSession({ cookie: cookies });
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Je moet ingelogd zijn om je auto\'s te zien.' }, { status: 401 });
+  }
   try {
     const cars = await prisma.cars.findMany({
+      where: { userId: session.user.id },
       orderBy: {
         created_at: 'desc'
       }

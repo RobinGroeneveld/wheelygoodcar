@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE `users` ADD COLUMN `created_at` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    ADD COLUMN `phone_number` VARCHAR(20) NULL,
+    ADD COLUMN `remember_token` VARCHAR(255) NULL,
+    ADD COLUMN `updated_at` TIMESTAMP(6) NULL;
