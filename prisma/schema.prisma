@@ -8,59 +8,95 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Better-auth vereist deze modellen met exact deze namen en velden
+model user {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  phone_number  String?  @db.VarChar(20)
+
+  sessions      session[]
+  accounts      account[]
+  cars          cars[]
+}
+
+model session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?   @db.Text
+  createdAt             DateTime
+  updatedAt             DateTime
+}
+
+model verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+}
+
 model cars {
-  id      Int     @id @default(autoincrement())
-  userId  Int
-  user    users  @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  license_plate String @db.VarChar(20)
-  make          String @db.VarChar(255)
-  model         String @db.VarChar(255)
-  price         Decimal @db.Decimal(10, 2)
-  mileage       Int
-  seats         Int?
-  doors         Int?
+  id              Int       @id @default(autoincrement())
+  userId          String
+  user            user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  license_plate   String    @db.VarChar(20)
+  make            String    @db.VarChar(255)
+  model           String    @db.VarChar(255)
+  price           Decimal   @db.Decimal(10, 2)
+  mileage         Int
+  seats           Int?
+  doors           Int?
   production_year Int?
-  weight        Int?
-  color         String? @db.VarChar(100)
-  image         String? @db.VarChar(500)
-  sold_at       DateTime? @db.Timestamp(6)
-  views         Int @default(0)
-  updated_at    DateTime @updatedAt @db.Timestamp(6)
-  created_at    DateTime @default(now()) @db.Timestamp(6)
-
-  car_tags      car_tag[]
+  weight          Int?
+  color           String?   @db.VarChar(100)
+  image           String?   @db.VarChar(500)
+  sold_at         DateTime? @db.Timestamp(6)
+  views           Int       @default(0)
+  updated_at      DateTime  @updatedAt @db.Timestamp(6)
+  created_at      DateTime  @default(now()) @db.Timestamp(6)
+  car_tags        car_tag[]
 }
 
-
-model users {
-  id       Int    @id @default(autoincrement())
-  name     String @db.VarChar(255)
-  email    String @unique @db.VarChar(255)
-  password String @db.VarChar(255)
-  remember_token String? @db.VarChar(255)
-  phone_number String? @db.VarChar(20)
-  created_at DateTime @default(now()) @db.Timestamp(6)
-  updated_at DateTime? @updatedAt @db.Timestamp(6)
-
-  cars     cars[]
-}
-
-
-model tags{
-  id Int @id @default(autoincrement())
-  name     String   @db.VarChar(100) 
-  color    String   @db.VarChar(20)
+model tags {
+  id       Int       @id @default(autoincrement())
+  name     String    @db.VarChar(100)
+  color    String    @db.VarChar(20)
   car_tags car_tag[]
 }
 
 model car_tag {
   tag_id Int
   car_id Int
-  
   car    cars @relation(fields: [car_id], references: [id], onDelete: Cascade)
   tag    tags @relation(fields: [tag_id], references: [id], onDelete: Cascade)
-  
+
   @@id([car_id, tag_id])
   @@index([tag_id])
 }

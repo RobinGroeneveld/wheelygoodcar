@@ -24,16 +24,17 @@ export default function RegisterPage() {
         email,
         password,
         name,
-        phoneNumber,
       });
       console.log('Registratie resultaat:', result);
       if (result?.error) {
-        setError(result.error);
+        // ✅ result.error is een object, haal de message eruit
+        const msg = result.error.message || result.error.statusText || "Registratie mislukt.";
+        setError(msg);
       } else {
-        router.push("/");
+        router.push("/login");
       }
-    } catch (err) {
-      setError("Registratie mislukt. Probeer het opnieuw.");
+    } catch (err: any) {
+      setError(err?.message || "Registratie mislukt. Probeer het opnieuw.");
       console.error('Registratie error:', err);
     } finally {
       setLoading(false);
