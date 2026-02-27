@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { signIn, signOut, useSession } from "@/app/lib/auth-client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -21,6 +21,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
+
+  const floatingLinesBackground = useMemo(() => (
+    <div className="fixed top-0 left-0 w-screen h-screen -z-10">
+      <FloatingLines
+        enabledWaves={["top", "middle", "bottom"]}
+        lineCount={5}
+        lineDistance={5}
+        bendRadius={5}
+        bendStrength={-0.5}
+        interactive={true}
+        parallax={true}
+      />
+    </div>
+  ), []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,17 +62,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="fixed top-0 left-0 w-screen h-screen -z-10">
-        <FloatingLines
-          enabledWaves={["top", "middle", "bottom"]}
-          lineCount={5}
-          lineDistance={5}
-          bendRadius={5}
-          bendStrength={-0.5}
-          interactive={true}
-          parallax={true}
-        />
-      </div>
+      {floatingLinesBackground}
 
       <div className="min-h-screen flex flex-col">
         <header className="pt-8">
