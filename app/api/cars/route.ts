@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         mileage: body.mileage ? parseInt(body.mileage) : 0,
         color: body.color || null,
         doors: body.doors ? parseInt(body.doors) : null,
-        image: body.image || null,
+        image: body.image && body.image.trim() !== '' ? body.image.trim() : null,
         production_year: body.production_year ? parseInt(body.production_year) : null,
         seats: body.seats ? parseInt(body.seats) : null,
         weight: body.weight ? parseInt(body.weight) : null,

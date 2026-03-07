@@ -28,6 +28,7 @@ const NAV_ITEMS = [
   { label: 'Home', href: '/' },
   { label: 'Auto verkopen', href: '/sell-car' },
   { label: "Overzicht alle auto's", href: '/overview' },
+  { label: "Mijn auto's", href: '/my-cars' },
   { label: 'Inloggen', href: '/login' },
 ];
 
@@ -39,7 +40,7 @@ export default function CarsPage() {
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const response = await fetch('/api/cars/all'); // publiek endpoint
+        const response = await fetch('/api/cars/all'); 
         const data = await response.json();
 
         if (Array.isArray(data)) {
@@ -75,6 +76,7 @@ export default function CarsPage() {
         <header className="pt-8">
           <div className="flex justify-center">
             <PillNav
+              logo="/images/logo.png"
               items={NAV_ITEMS}
               activeHref="/overview"
               ease="power2.easeOut"
@@ -121,62 +123,65 @@ export default function CarsPage() {
       </div>
     </>
   );
+}
 
-  function CarCard({ car }: { car: Car }) {
-    return (
-      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-        {car.image ? (
-          <img
-            src={car.image}
-            alt={`${car.make} ${car.model}`}
-            className="w-full h-56 object-cover"
-          />
-        ) : (
-          <div className="w-full h-56 bg-white/10 flex items-center justify-center">
-            <span className="text-6xl">🚗</span>
-          </div>
-        )}
-
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-white mb-1">
-            {car.make} {car.model}
-          </h2>
-          <p className="text-gray-300 mb-4">{car.production_year}</p>
-
-          <div className="mb-4">
-            <p className="text-3xl font-bold text-green-400">
-              € {car.price.toLocaleString('nl-NL')}
-            </p>
-            <p className="text-sm text-gray-300 mt-1">
-              {car.mileage.toLocaleString('nl-NL')} km
-            </p>
-          </div>
-
-          <div className="flex gap-3 mb-4 flex-wrap">
-            {car.doors && (
-              <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium">
-                🚪 {car.doors} deuren
-              </span>
-            )}
-            {car.seats && (
-              <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium">
-                💺 {car.seats} zitplaatsen
-              </span>
-            )}
-          </div>
-
-          {car.color && (
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-semibold">Kleur:</span> {car.color}
-            </p>
-          )}
-          <p className="text-xs text-gray-400 mb-4">Kenteken: {car.license_plate}</p>
-
-          <button className="w-full bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl font-semibold transition-all duration-300 border border-white/30">
-            Bekijk details →
-          </button>
+function CarCard({ car }: { car: Car }) {
+  const [imageError, setImageError] = useState(false);
+  
+  return (
+    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+      {car.image && !imageError ? (
+        <img
+          src={car.image}
+          alt={`${car.make} ${car.model}`}
+          className="w-full h-56 object-cover"
+          onError={() => setImageError(true)}
+        />
+      ) : (
+        <div className="w-full h-56 bg-white/10 flex items-center justify-center">
+          <span className="text-6xl">🚗</span>
         </div>
+      )}
+
+      <div className="p-6">
+        <h2 className="text-2xl font-bold text-white mb-1">
+          {car.make} {car.model}
+        </h2>
+        <p className="text-gray-300 mb-4">{car.production_year}</p>
+
+        <div className="mb-4">
+          <p className="text-3xl font-bold text-green-400">
+            € {Number(car.price).toLocaleString('nl-NL')}
+          </p>
+          <p className="text-sm text-gray-300 mt-1">
+            {car.mileage.toLocaleString('nl-NL')} km
+          </p>
+        </div>
+
+        <div className="flex gap-3 mb-4 flex-wrap">
+          {car.doors && (
+            <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium">
+              🚪 {car.doors} deuren
+            </span>
+          )}
+          {car.seats && (
+            <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium">
+              💺 {car.seats} zitplaatsen
+            </span>
+          )}
+        </div>
+
+        {car.color && (
+          <p className="text-sm text-gray-300 mb-2">
+            <span className="font-semibold">Kleur:</span> {car.color}
+          </p>
+        )}
+        <p className="text-xs text-gray-400 mb-4">Kenteken: {car.license_plate}</p>
+
+        <button className="w-full bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl font-semibold transition-all duration-300 border border-white/30">
+          Bekijk details →
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
 }

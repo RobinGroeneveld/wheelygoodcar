@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { label: 'Home', href: '/' },
   { label: 'Auto verkopen', href: '/sell-car' },
   { label: "Overzicht alle auto's", href: '/overview' },
+  { label: "Mijn auto's", href: '/my-cars' },
   { label: 'Inloggen', href: '/login' },
 ];
 
@@ -23,15 +24,19 @@ export default function LoginPage() {
   const { data: session } = useSession();
 
   const floatingLinesBackground = useMemo(() => (
-    <div className="fixed top-0 left-0 w-screen h-screen -z-10">
+    <div className="fixed top-0 left-0 w-screen h-screen -z-10 pointer-events-none">
       <FloatingLines
+        linesGradient={[]}
         enabledWaves={["top", "middle", "bottom"]}
-        lineCount={5}
-        lineDistance={5}
+        lineCount={[5, 5, 5]}
+        lineDistance={[5, 5, 5]}
+        topWavePosition={{ x: 0, y: 0.8, rotate: 0 }}
+        middleWavePosition={{ x: 0, y: 0, rotate: 0 }}
+        bottomWavePosition={{ x: 2.0, y: -0.7, rotate: -1 }}
         bendRadius={5}
         bendStrength={-0.5}
-        interactive={true}
-        parallax={true}
+        interactive={false}
+        parallax={false}
       />
     </div>
   ), []);
@@ -68,6 +73,7 @@ export default function LoginPage() {
         <header className="pt-8">
           <div className="flex justify-center">
             <PillNav
+              logo="/images/logo.png"
               items={NAV_ITEMS}
               activeHref="/login"
               ease="power2.easeOut"
