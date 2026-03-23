@@ -161,12 +161,12 @@ function CarCard({ car }: { car: Car }) {
         <div className="flex gap-3 mb-4 flex-wrap">
           {car.doors && (
             <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium">
-              🚪 {car.doors} deuren
+              {car.doors} deuren
             </span>
           )}
           {car.seats && (
             <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium">
-              💺 {car.seats} zitplaatsen
+              {car.seats} zitplaatsen
             </span>
           )}
         </div>
@@ -177,10 +177,6 @@ function CarCard({ car }: { car: Car }) {
           </p>
         )}
         <p className="text-xs text-gray-400 mb-4">Kenteken: {car.license_plate}</p>
-
-        <button className="w-full bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl font-semibold transition-all duration-300 border border-white/30">
-          Bekijk details →
-        </button>
       </div>
     </div>
   );
