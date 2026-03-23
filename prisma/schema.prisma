@@ -8,7 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Better-auth vereist deze modellen met exact deze namen en velden
 model user {
   id            String   @id
   name          String

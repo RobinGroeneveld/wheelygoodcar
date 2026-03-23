@@ -20,7 +20,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Geen bestand gevonden' }, { status: 400 });
     }
 
-    // Check bestandstype
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ 
@@ -28,7 +27,6 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Max 5MB
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json({ error: 'Bestand is te groot. Maximum is 5MB.' }, { status: 400 });
@@ -37,7 +35,6 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Maak unieke bestandsnaam
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 8);
     const extension = file.name.split('.').pop() || 'jpg';

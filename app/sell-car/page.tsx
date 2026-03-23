@@ -11,6 +11,22 @@ const handleAnimationComplete = () => {
   console.log('Animation completed!');
 };
 
+function normalizeLicensePlate(input: string): string {
+  return input.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+}
+
+type RdwVehicleResponse = {
+  license_plate: string;
+  make: string;
+  model: string;
+  production_year: number | null;
+  color: string;
+  seats: number | null;
+  doors: number | null;
+  weight: number | null;
+  source: 'RDW';
+};
+
 export default function SellCarForm() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
@@ -31,6 +47,8 @@ export default function SellCarForm() {
   const [production_year, setProduction_Year] = useState("");
   const [seats, setSeats] = useState("");
   const [weight, setWeight] = useState("");
+  const [rdwLoading, setRdwLoading] = useState(false);
+  const [rdwMessage, setRdwMessage] = useState<string | null>(null);
 
   const floatingLinesBackground = useMemo(() => (
     <div className="fixed top-0 left-0 w-screen h-screen -z-10 pointer-events-none">
@@ -54,7 +72,7 @@ export default function SellCarForm() {
     if (!isPending && !session?.user) {
       router.push("/login");
     }
-  }, [session, isPending]);
+  }, [session, isPending, router]);
 
 
   if (isPending) {
@@ -68,9 +86,40 @@ export default function SellCarForm() {
 
   if (!session?.user) return null;
 
-  const handleLicensePlateSubmit = (e: React.FormEvent) => {
+  const handleLicensePlateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (license_plate.trim()) {
+    const normalizedPlate = normalizeLicensePlate(license_plate);
+
+    if (!normalizedPlate) {
+      return;
+    }
+
+    setLicense_Plate(normalizedPlate);
+    setRdwLoading(true);
+    setRdwMessage(null);
+
+    try {
+      const response = await fetch(`/api/rdw/vehicle?licensePlate=${encodeURIComponent(normalizedPlate)}`);
+
+      if (response.ok) {
+        const rdwData = (await response.json()) as RdwVehicleResponse;
+        setMake(rdwData.make ?? "");
+        setModel(rdwData.model ?? "");
+        setProduction_Year(rdwData.production_year ? String(rdwData.production_year) : "");
+        setColor(rdwData.color ?? "");
+        setSeats(rdwData.seats ? String(rdwData.seats) : "");
+        setDoors(rdwData.doors ? String(rdwData.doors) : "");
+        setWeight(rdwData.weight ? String(rdwData.weight) : "");
+        setRdwMessage('RDW-gegevens zijn alvast ingevuld. Controleer en vul aan waar nodig.');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Kon RDW-gegevens niet ophalen.' }));
+        setRdwMessage(errorData.error ?? 'Kon RDW-gegevens niet ophalen. Vul de velden handmatig in.');
+      }
+    } catch (error) {
+      console.error('RDW lookup error:', error);
+      setRdwMessage('Kon RDW-gegevens niet ophalen. Vul de velden handmatig in.');
+    } finally {
+      setRdwLoading(false);
       setStep(2);
     }
   };
@@ -135,12 +184,12 @@ export default function SellCarForm() {
       const data = await response.json();
 
       if (response.ok) {
-        alert('Auto succesvol toegevoegd! 🚗');
-        // Reset alle velden en ga terug naar stap 1
+        alert('Auto succesvol toegevoegd!');
         setPrice(''); setMileage(''); setColor(''); setDoors('');
         setImage(''); setImageFile(null); setImagePreview(null);
         setLicense_Plate(''); setMake(''); setModel('');
         setProduction_Year(''); setSeats(''); setWeight('');
+        setRdwMessage(null);
         setStep(1);
         router.push('/my-cars');
       } else {
@@ -192,7 +241,6 @@ export default function SellCarForm() {
 
       <main>
         {step === 1 ? (
-          /* STAP 1: Kenteken invoeren */
           <form onSubmit={handleLicensePlateSubmit} className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg">
             <h2 className="text-xl font-bold mb-4 text-center">Stap 1: Voer je kenteken in</h2>
             <p className="text-gray-600 text-sm mb-6 text-center">
@@ -210,13 +258,13 @@ export default function SellCarForm() {
 
             <button
               type="submit"
+              disabled={rdwLoading}
               className="mt-6 bg-cyan-500 text-white px-4 py-3 rounded-lg hover:bg-cyan-600 w-full font-semibold transition-all"
             >
-              Volgende stap →
+              {rdwLoading ? 'RDW-gegevens ophalen...' : 'Volgende stap →'}
             </button>
           </form>
         ) : (
-          /* STAP 2: Overige gegevens invullen */
           <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg space-y-4">
             <div className="flex items-center justify-between mb-4">
               <button
@@ -230,11 +278,16 @@ export default function SellCarForm() {
               <div className="w-16"></div>
             </div>
 
-            {/* Toon het ingevoerde kenteken */}
             <div className="bg-gray-100 p-3 rounded-lg text-center mb-4">
               <p className="text-sm text-gray-500">Kenteken</p>
               <p className="text-xl font-bold tracking-wider">{license_plate}</p>
             </div>
+
+            {rdwMessage && (
+              <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3 text-sm text-cyan-900">
+                {rdwMessage}
+              </div>
+            )}
 
             <input type="text" placeholder="Merk (bijv. Mercedes)" value={make}
               onChange={(e) => setMake(e.target.value)} className="w-full p-2 border rounded" required />
@@ -263,7 +316,6 @@ export default function SellCarForm() {
             <input type="number" placeholder="Gewicht (kg)" value={weight}
               onChange={(e) => setWeight(e.target.value)} className="w-full p-2 border rounded" />
 
-            {/* Afbeelding upload */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Foto van je auto</label>
               <div className="flex items-center gap-4">

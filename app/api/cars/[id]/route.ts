@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { auth } from '@/app/lib/auth';
 
-// GET - Haal specifieke auto op
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -30,7 +29,6 @@ export async function GET(
   }
 }
 
-// PUT - Update een auto
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -51,7 +49,6 @@ export async function PUT(
   }
 
   try {
-    // Check of de auto van de ingelogde gebruiker is
     const existingCar = await prisma.cars.findUnique({
       where: { id: carId },
     });
@@ -66,7 +63,6 @@ export async function PUT(
 
     const body = await request.json();
 
-    // Helper functie om lege strings als null te behandelen
     const normalizeImage = (img: string | undefined | null) => {
       if (img === undefined) return existingCar.image;
       if (img === null || img.trim() === '') return null;
@@ -100,7 +96,6 @@ export async function PUT(
   }
 }
 
-// DELETE - Verwijder een auto
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -121,7 +116,6 @@ export async function DELETE(
   }
 
   try {
-    // Check of de auto van de ingelogde gebruiker is
     const existingCar = await prisma.cars.findUnique({
       where: { id: carId },
     });

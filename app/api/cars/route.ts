@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const session = await auth.api.getSession({   // ← dit was fout
+  const session = await auth.api.getSession({
     headers: request.headers,
   });
 

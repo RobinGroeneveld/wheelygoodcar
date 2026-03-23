@@ -457,11 +457,9 @@ function EditCarModal({
             </div>
           </div>
           
-          {/* Afbeelding upload */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">Foto van je auto</label>
             
-            {/* Huidige afbeelding preview */}
             {imagePreview && (
               <div className="mb-3 relative">
                 <img 
@@ -491,7 +489,7 @@ function EditCarModal({
                 className="hidden"
               />
               <span className="text-gray-400">
-                {imageFile ? `📷 ${imageFile.name}` : '📷 Nieuwe afbeelding kiezen...'}
+                {imageFile ? `${imageFile.name}` : '📷 Nieuwe afbeelding kiezen...'}
               </span>
             </label>
           </div>
@@ -562,12 +560,12 @@ function CarCard({
         <div className="flex gap-3 mb-4 flex-wrap">
           {car.doors && (
             <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium">
-              🚪 {car.doors} deuren
+              {car.doors} deuren
             </span>
           )}
           {car.seats && (
             <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium">
-              💺 {car.seats} zitplaatsen
+              {car.seats} zitplaatsen
             </span>
           )}
         </div>
@@ -584,13 +582,13 @@ function CarCard({
             onClick={onEdit}
             className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-xl font-semibold transition-all"
           >
-            ✏️ Bewerken
+            Bewerken
           </button>
           <button
             onClick={onDelete}
             className="flex-1 bg-red-500/80 hover:bg-red-600 text-white py-3 rounded-xl font-semibold transition-all"
           >
-            🗑️ Verwijderen
+            Verwijderen
           </button>
         </div>
       </div>

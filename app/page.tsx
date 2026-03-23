@@ -9,7 +9,6 @@ import LiquidChrome from '../components/LiquidChrome';
 export default function Page() {
   return (
     <>
-      {/* Fixed full-screen background */}
       <div className="fixed top-0 left-0 w-screen h-screen -z-10">
         <LiquidChrome
           baseColor={[0.0, 0.1, 0.1]}
@@ -21,7 +20,6 @@ export default function Page() {
         />
       </div>
 
-      {/* Content */}
       <div className="relative min-h-screen">
         <header className="pt-20">
           <div className="flex justify-center gap-8 mt-20">
