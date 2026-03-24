@@ -577,7 +577,7 @@ function CarCard({
         )}
         <p className="text-xs text-gray-400 mb-4">Kenteken: {car.license_plate}</p>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 mb-2">
           <button
             onClick={onEdit}
             className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-xl font-semibold transition-all"
@@ -591,6 +591,15 @@ function CarCard({
             Verwijderen
           </button>
         </div>
+        <a
+          href={`/api/cars/${car.id}/pdf`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block bg-white/20 hover:bg-cyan-500 text-cyan-900 hover:text-white text-center py-2 rounded-xl font-semibold transition-all mt-2"
+          download={`auto-${car.license_plate}.pdf`}
+        >
+          Download PDF
+        </a>
       </div>
     </div>
   );

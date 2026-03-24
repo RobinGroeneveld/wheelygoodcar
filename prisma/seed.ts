@@ -1,7 +1,11 @@
 import { PrismaClient } from "../generated/prisma";
 import { randomUUID } from "crypto";
+import { hashPassword } from "better-auth/crypto";
+import { readdirSync } from "fs";
+import path from "path";
 
 const prisma = new PrismaClient();
+const DEFAULT_SEED_PASSWORD = "12345678";
 
 // ----------------------------------------------
 // Help functions
@@ -25,6 +29,43 @@ function randomLicensePlate() {
   const L = () => letters[randomInt(0, letters.length - 1)];
   const D = () => digits[randomInt(0, 9)];
   return `${L()}${L()}-${D()}${D()}${D()}-${L()}${L()}`;
+}
+
+function getSeedImageUrls(): string[] {
+  const cwd = process.cwd();
+  const candidateImageRoots = [
+    path.resolve(cwd, "public", "images"),
+    path.resolve(cwd, "..", "public", "images"),
+  ];
+  const imageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif"]);
+  const result: string[] = [];
+
+  const addImagesFromDirectory = (directoryPath: string, publicPrefix: string) => {
+    try {
+      const entries = readdirSync(directoryPath, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isFile()) {
+          continue;
+        }
+
+        const extension = path.extname(entry.name).toLowerCase();
+        if (!imageExtensions.has(extension)) {
+          continue;
+        }
+
+        result.push(`${publicPrefix}/${entry.name}`);
+      }
+    } catch {
+      // Directory might not exist in every environment.
+    }
+  };
+
+  for (const imagesRoot of candidateImageRoots) {
+    addImagesFromDirectory(imagesRoot, "/images");
+    addImagesFromDirectory(path.join(imagesRoot, "cars"), "/images/cars");
+  }
+
+  return [...new Set(result)];
 }
 
 // --------------------------------------------
@@ -100,6 +141,7 @@ const TAGS_DATA = [
 // ---------------------------------------------
 async function main() {
   console.log("Seeding gestart...\n");
+  const seedImages = getSeedImageUrls();
 
   // empty the database
   await prisma.car_tag.deleteMany();
@@ -150,6 +192,29 @@ async function main() {
   await prisma.user.createMany({ data: usersData });
   console.log(`${usersData.length} users created`);
 
+  const hashedSeedPassword = await hashPassword(DEFAULT_SEED_PASSWORD);
+  const accountsData = usersData.map((user) => {
+    const now = new Date();
+    return {
+      id: randomUUID(),
+      accountId: user.id,
+      providerId: "credential",
+      userId: user.id,
+      password: hashedSeedPassword,
+      createdAt: now,
+      updatedAt: now,
+      accessToken: null,
+      refreshToken: null,
+      idToken: null,
+      accessTokenExpiresAt: null,
+      refreshTokenExpiresAt: null,
+      scope: null,
+    };
+  });
+
+  await prisma.account.createMany({ data: accountsData });
+  console.log(`${accountsData.length} credential accounts created (password: ${DEFAULT_SEED_PASSWORD})`);
+
   // -------------250 cars --------------------
   const makes   = Object.keys(MAKES_MODELS);
   const carsData = Array.from({ length: 250 }, () => {
@@ -170,7 +235,7 @@ async function main() {
       production_year: year,
       weight:          randomInt(900, 3500),
       color:           randomItem(COLORS),
-      image:           null,
+      image:           seedImages.length > 0 ? randomItem(seedImages) : null,
       sold_at:         Math.random() < 0.1 ? new Date() : null,
       views:           randomInt(0, 500),
     };

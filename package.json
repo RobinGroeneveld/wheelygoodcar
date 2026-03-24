@@ -12,10 +12,10 @@
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
-  
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.3.0",
     "@prisma/client": "^5.22.0",
+    "@react-pdf/renderer": "^4.3.2",
     "better-auth": "^1.4.18",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -42,6 +42,7 @@
     "@types/node": "^20.19.30",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-pdf": "^6.2.0",
     "eslint": "^9",
     "shadcn": "^3.8.4",
     "tailwindcss": "^4",
