@@ -30,6 +30,7 @@ export default function Page() {
                 { label: 'Auto verkopen', href: '/sell-car' },
                 { label: "Overzicht alle auto's", href: '/overview' },
                 { label: "Mijn auto's", href: '/my-cars' },
+                {label: 'admin', href: '/admin/tag-stats'},
                 { label: 'Inloggen', href: '/login' }
               ]}
               activeHref="/"
