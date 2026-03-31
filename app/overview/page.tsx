@@ -26,11 +26,13 @@ interface Car {
 }
 
 const NAV_ITEMS = [
-  { label: 'Home', href: '/' },
+   { label: 'Home', href: '/' },
   { label: 'Auto verkopen', href: '/sell-car' },
   { label: "Overzicht alle auto's", href: '/overview' },
   { label: "Mijn auto's", href: '/my-cars' },
-  { label: 'Inloggen', href: '/login' },
+  {label: 'admin', href: '/admin/tag-stats'},
+  {label: 'Admin Top Cars', href: '/admin-top-cars'},
+  { label: 'Inloggen', href: '/login' }
 ];
 
 export default function CarsPage() {

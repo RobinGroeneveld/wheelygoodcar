@@ -31,6 +31,7 @@ export default function Page() {
                 { label: "Overzicht alle auto's", href: '/overview' },
                 { label: "Mijn auto's", href: '/my-cars' },
                 {label: 'admin', href: '/admin/tag-stats'},
+                {label: 'Admin Top Cars', href: '/admin-top-cars'},
                 { label: 'Inloggen', href: '/login' }
               ]}
               activeHref="/"

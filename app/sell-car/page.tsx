@@ -212,11 +212,13 @@ export default function SellCarForm() {
           <PillNav
             logo="/images/logo.png"
             items={[
-              { label: 'Home', href: '/' },
-              { label: 'Auto verkopen', href: '/sell-car' },
-              { label: "Overzicht alle auto's", href: '/overview' },
-              { label: "Mijn auto's", href: '/my-cars' },
-              { label: 'Inloggen', href: '/login' }
+               { label: 'Home', href: '/' },
+                { label: 'Auto verkopen', href: '/sell-car' },
+                { label: "Overzicht alle auto's", href: '/overview' },
+                { label: "Mijn auto's", href: '/my-cars' },
+                {label: 'admin', href: '/admin/tag-stats'},
+                {label: 'Admin Top Cars', href: '/admin-top-cars'},
+                { label: 'Inloggen', href: '/login' }
             ]}
             activeHref="/sell-car"
             ease="power2.easeOut"

@@ -29,7 +29,7 @@ export interface PillNavProps {
 const PillNav: React.FC<PillNavProps> = ({
   logo,
   logoAlt = 'Logo',
-  items,
+  items = [],
   activeHref,
   className = '',
   ease = 'power3.easeOut',
