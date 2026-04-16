@@ -39,6 +39,7 @@ export default function CarsPage() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
 
   useEffect(() => {
     const fetchCars = async () => {
@@ -62,6 +63,26 @@ export default function CarsPage() {
     fetchCars();
   }, []);
 
+  const handleCarClick = async (car: Car) => {
+    setSelectedCar(car);
+    
+    try {
+      await fetch(`/api/cars/${car.id}/view`, {
+        method: 'POST',
+      });
+      
+      setCars(cars.map(c => 
+        c.id === car.id 
+          ? { ...c, views: c.views + 1 }
+          : c
+      ));
+      
+      setSelectedCar({ ...car, views: car.views + 1 });
+    } catch (err) {
+      console.error('Error updating views:', err);
+    }
+  };
+
   return (
     <>
       <div className="fixed top-0 left-0 w-screen h-screen -z-10">
@@ -78,6 +99,7 @@ export default function CarsPage() {
       <div className="min-h-screen flex flex-col">
         <header className="pt-8">
           <div className="flex justify-center">
+            <a href="/detail-car">Bekijk details</a>
             <PillNav
               logo="/images/logo.png"
               items={NAV_ITEMS}
@@ -118,21 +140,28 @@ export default function CarsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {cars.map((car) => (
-                <CarCard key={car.id} car={car} />
+                <CarCard key={car.id} car={car} onClick={() => handleCarClick(car)} />
               ))}
             </div>
           )}
         </main>
       </div>
+
+      {selectedCar && (
+        <CarDetailModal car={selectedCar} onClose={() => setSelectedCar(null)} />
+      )}
     </>
   );
 }
 
-function CarCard({ car }: { car: Car }) {
+function CarCard({ car, onClick }: { car: Car; onClick: () => void }) {
   const [imageError, setImageError] = useState(false);
   
   return (
-    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+    <div 
+      onClick={onClick}
+      className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
+    >
       {car.image && !imageError ? (
         <img
           src={car.image}
@@ -181,6 +210,93 @@ function CarCard({ car }: { car: Car }) {
         )}
         <p className="text-xs text-gray-400 mb-4">Kenteken: {car.license_plate}</p>
       </div>
+    </div>
+  );
+}
+
+function CarDetailModal({ car, onClose }: { car: Car; onClose: () => void }) {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div 
+        className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header met close button */}
+        <div className="sticky top-0 flex justify-between items-center p-6 border-b border-white/10 bg-slate-900/80 backdrop-blur">
+          <h2 className="text-2xl font-bold text-white">
+            {car.make} {car.model}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Image */}
+          {car.image && !imageError ? (
+            <img
+              src={car.image}
+              alt={`${car.make} ${car.model}`}
+              className="w-full h-80 object-cover rounded-2xl"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-full h-80 bg-white/10 flex items-center justify-center rounded-2xl">
+              <span className="text-8xl">🚗</span>
+            </div>
+          )}
+
+          {/* Price */}
+          <div className="bg-green-500/20 border border-green-500/50 rounded-xl p-4">
+            <p className="text-green-400 text-sm font-semibold mb-1">Prijs</p>
+            <p className="text-4xl font-bold text-green-400">
+              € {Number(car.price).toLocaleString('nl-NL')}
+            </p>
+          </div>
+
+          {/* Views Count */}
+          <div className="bg-blue-500/20 border border-blue-500/50 rounded-xl p-4">
+            <p className="text-blue-400 text-sm font-semibold mb-1">Aantal weergaven</p>
+            <p className="text-3xl font-bold text-blue-400">
+              {car.views} {car.views === 1 ? 'weergave' : 'weergaven'}
+            </p>
+          </div>
+
+          {/* Details Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <DetailItem label="Kenteken" value={car.license_plate} />
+            <DetailItem label="Bouwjaar" value={car.production_year?.toString() || 'N.v.t.'} />
+            <DetailItem label="Kilometerstand" value={`${car.mileage.toLocaleString('nl-NL')} km`} />
+            <DetailItem label="Kleur" value={car.color || 'N.v.t.'} />
+            <DetailItem label="Deuren" value={car.doors?.toString() || 'N.v.t.'} />
+            <DetailItem label="Zitplaatsen" value={car.seats?.toString() || 'N.v.t.'} />
+            {car.weight && <DetailItem label="Gewicht" value={`${car.weight} kg`} />}
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded-lg transition-colors mt-4"
+          >
+            Sluiten
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+      <p className="text-gray-400 text-xs font-medium mb-1">{label}</p>
+      <p className="text-white font-semibold">{value}</p>
     </div>
   );
 }
