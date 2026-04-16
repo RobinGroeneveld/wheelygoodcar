@@ -33,12 +33,22 @@ const NAV_ITEMS = [
   { label: 'Inloggen', href: '/login' }
 ];
 
+// Hoofdpagina voor het tonen van alle auto's
 export default function CarsPage() {
+  // State voor alle auto's uit de database
   const [cars, setCars] = useState<Car[]>([]);
+  // Laadstatus voor initiële fetch
   const [loading, setLoading] = useState(true);
+  // Foutmelding bij mislukte fetch
   const [error, setError] = useState<string | null>(null);
+  // Geselecteerde auto voor detailweergave (modal)
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  // Zoekveld (merk, model, kleur, kenteken)
+  const [searchQuery, setSearchQuery] = useState('');
+  // Maximale prijs filter
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
 
+  // Haal alle auto's op bij het laden van de pagina
   useEffect(() => {
     const fetchCars = async () => {
       try {
@@ -61,24 +71,42 @@ export default function CarsPage() {
     fetchCars();
   }, []);
 
+  // Wanneer een auto wordt aangeklikt: open modal en verhoog views
   const handleCarClick = async (car: Car) => {
     setSelectedCar(car);
-    
     try {
       await fetch(`/api/cars/${car.id}/view`, {
         method: 'POST',
       });
-      
       setCars(cars.map(c => 
         c.id === car.id 
           ? { ...c, views: c.views + 1 }
           : c
       ));
-      
       setSelectedCar({ ...car, views: car.views + 1 });
     } catch (err) {
       console.error('Error updating views:', err);
     }
+  };
+
+  // Filter auto's op basis van zoekopdracht en prijs
+  const getFilteredCars = () => {
+    return cars.filter(car => {
+      if (car.sold_at) return false; // Verkochte auto's niet tonen
+      // Zoekfilter: merk, model, kleur, kenteken
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch = 
+          car.make.toLowerCase().includes(query) ||
+          car.model.toLowerCase().includes(query) ||
+          (car.color && car.color.toLowerCase().includes(query)) ||
+          car.license_plate.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+      // Prijsfilter
+      if (maxPrice && car.price > maxPrice) return false;
+      return true;
+    });
   };
 
   return (
@@ -97,7 +125,6 @@ export default function CarsPage() {
       <div className="min-h-screen flex flex-col">
         <header className="pt-8">
           <div className="flex justify-center">
-            <a href="/detail-car">Bekijk details</a>
             <PillNav
               logo="/images/logo.png"
               items={NAV_ITEMS}
@@ -122,6 +149,7 @@ export default function CarsPage() {
         </header>
 
         <main className="container mx-auto px-4 py-12">
+          {/* Hoofdcontent: laden, foutmelding of resultaten */}
           {loading ? (
             <div className="text-center py-20">
               <p className="text-xl text-white">Laden...</p>
@@ -131,23 +159,76 @@ export default function CarsPage() {
               <p className="text-xl text-red-400">{error}</p>
             </div>
           ) : (
-            (() => {
-              // Filter out sold cars (where sold_at is not null)
-              const activeCars = cars.filter(car => !car.sold_at);
-              
-              return activeCars.length === 0 ? (
-                <div className="text-center py-20">
-                  <div className="text-6xl mb-4">🚗</div>
-                  <p className="text-xl text-white">Nog geen auto's beschikbaar</p>
+            <>
+              {/* Zoek- en filtersectie */}
+              <div className="mb-8 space-y-4">
+                {/* Zoekbalk voor merk, model, kleur, kenteken */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Zoeken..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className=" px-6 py-3 rounded-lg bg-white/10 border border-white/30 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500 focus:bg-white/20 transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {activeCars.map((car) => (
-                    <CarCard key={car.id} car={car} onClick={() => handleCarClick(car)} />
-                  ))}
+
+                {/* Prijsfilter slider */}
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <label className="block text-sm text-gray-300 mb-2">
+                      Maximale prijs: {maxPrice ? `€ ${Number(maxPrice).toLocaleString('nl-NL')}` : 'Geen limiet'}
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="500000"
+                      step="5000"
+                      value={maxPrice || 0}
+                      onChange={(e) => setMaxPrice(parseInt(e.target.value) || null)}
+                      className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    />
+                  </div>
+                  {maxPrice && (
+                    <button
+                      onClick={() => setMaxPrice(null)}
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm"
+                    >
+                      Verwijderen
+                    </button>
+                  )}
                 </div>
-              );
-            })()
+              </div>
+
+              {/* Resultaten tonen */}
+              {(() => {
+                const filteredCars = getFilteredCars();
+                return filteredCars.length === 0 ? (
+                  <div className="text-center py-20">
+                    <p className="text-xl text-white">
+                      {cars.length === 0 ? 'Nog geen auto\'s beschikbaar' : 'Geen auto\'s gevonden die aan uw zoekcriteria voldoen'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-gray-300 mb-4">{filteredCars.length} auto's gevonden</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {filteredCars.map((car) => (
+                        <CarCard key={car.id} car={car} onClick={() => handleCarClick(car)} />
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
+            </>
           )}
         </main>
       </div>
