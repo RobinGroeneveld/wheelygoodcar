@@ -23,6 +23,7 @@ interface Car {
   image?: string;
   views: number;
   created_at: string;
+  sold_at?: string | null;
 }
 
 const NAV_ITEMS = [
@@ -132,17 +133,24 @@ export default function CarsPage() {
             <div className="text-center py-20">
               <p className="text-xl text-red-400">{error}</p>
             </div>
-          ) : cars.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="text-6xl mb-4">🚗</div>
-              <p className="text-xl text-white">Nog geen auto's beschikbaar</p>
-            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {cars.map((car) => (
-                <CarCard key={car.id} car={car} onClick={() => handleCarClick(car)} />
-              ))}
-            </div>
+            (() => {
+              // Filter out sold cars (where sold_at is not null)
+              const activeCars = cars.filter(car => !car.sold_at);
+              
+              return activeCars.length === 0 ? (
+                <div className="text-center py-20">
+                  <div className="text-6xl mb-4">🚗</div>
+                  <p className="text-xl text-white">Nog geen auto's beschikbaar</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {activeCars.map((car) => (
+                    <CarCard key={car.id} car={car} onClick={() => handleCarClick(car)} />
+                  ))}
+                </div>
+              );
+            })()
           )}
         </main>
       </div>

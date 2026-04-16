@@ -22,6 +22,7 @@ interface Car {
   image?: string;
   views: number;
   created_at: string;
+  sold_at?: string | null;
 }
 
 const NAV_ITEMS = [
@@ -35,15 +36,31 @@ const NAV_ITEMS = [
 ];
 
 
-
+// Main page for managing user's cars
 export default function CarsPage() {
+
+  // State for all cars of the user
   const [cars, setCars] = useState<Car[]>([]);
+
+  // Loading state for initial fetch
   const [loading, setLoading] = useState(true);
+
+  // Error state for fetch failures
   const [error, setError] = useState<string | null>(null);
+
+  // State for currently edited car (modal)
   const [editingCar, setEditingCar] = useState<Car | null>(null);
+
+  // State for currently deleted car (confirmation)
   const [deletingCarId, setDeletingCarId] = useState<number | null>(null);
+
+  // State for save button loading
   const [saving, setSaving] = useState(false);
+
+  // Auth/session state
   const { data: session, isPending } = useSession();
+
+  // Next.js router
   const router = useRouter();
 
   const plasmaBackground = useMemo(() => (
@@ -59,6 +76,8 @@ export default function CarsPage() {
     </div>
   ), []);
 
+
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isPending && !session) {
       router.push('/login');
@@ -66,6 +85,8 @@ export default function CarsPage() {
   }, [session, isPending, router]);
 
 
+
+  // Fetch all cars for the logged-in user
   const fetchCars = async () => {
     try {
       const response = await fetch('/api/cars');
@@ -85,11 +106,15 @@ export default function CarsPage() {
     }
   };
 
+
+  // Fetch cars when session is available
   useEffect(() => {
     if (!session) return;
     fetchCars();
   }, [session]);
 
+
+  // Delete a car by ID
   const handleDelete = async (carId: number) => {
     try {
       const response = await fetch(`/api/cars/${carId}`, {
@@ -109,6 +134,38 @@ export default function CarsPage() {
     }
   };
 
+
+  // Toggle the sold/active status of a car (no reload)
+  const handleToggleSoldStatus = async (car: Car) => {
+    // If sold_at is set, mark as active; otherwise, mark as sold
+    const newSoldAt = car.sold_at ? null : new Date().toISOString();
+    try {
+      const response = await fetch(`/api/cars/${car.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...car,
+          sold_at: newSoldAt,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCars(cars.map(c => c.id === car.id ? data.car : c));
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Kon status niet wijzigen');
+      }
+    } catch (err) {
+      console.error('Error toggling sold status:', err);
+      alert('Er is een fout opgetreden bij het wijzigen van de status.');
+    }
+  };
+
+
+  // Save changes from the edit modal
   const handleSaveEdit = async (updatedCar: Car) => {
     setSaving(true);
     try {
@@ -135,8 +192,6 @@ export default function CarsPage() {
       setSaving(false);
     }
   };
-
-   
 
   if (isPending || !session) {
     return (
@@ -258,6 +313,7 @@ export default function CarsPage() {
                     car={car}
                     onEdit={() => setEditingCar(car)}
                     onDelete={() => setDeletingCarId(car.id)}
+                    onToggleSoldStatus={() => handleToggleSoldStatus(car)}
                   />
                 ))}
               </div>
@@ -522,24 +578,40 @@ function CarCard({
   car,
   onEdit,
   onDelete,
+  onToggleSoldStatus,
 }: {
   car: Car;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleSoldStatus: () => void;
 }) {
   const [imageError, setImageError] = useState(false);
+  const isSold = !!car.sold_at;
   
   return (
-    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+    <div className={`bg-white/10 backdrop-blur-md border rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 ${isSold ? 'border-red-500/50' : 'border-white/20'}`}>
+      {}
+      <div className="absolute top-3 right-3 z-10">
+        {isSold ? (
+          <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+            ✓ VERKOCHT
+          </span>
+        ) : (
+          <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+            ACTIEF
+          </span>
+        )}
+      </div>
+
       {car.image && !imageError ? (
         <img
           src={car.image}
           alt={`${car.make} ${car.model}`}
-          className="w-full h-56 object-cover"
+          className={`w-full h-56 object-cover ${isSold ? 'opacity-50' : ''}`}
           onError={() => setImageError(true)}
         />
       ) : (
-        <div className="w-full h-56 bg-white/10 flex items-center justify-center">
+        <div className={`w-full h-56 bg-white/10 flex items-center justify-center ${isSold ? 'opacity-50' : ''}`}>
           <span className="text-6xl">🚗</span>
         </div>
       )}
@@ -579,12 +651,24 @@ function CarCard({
         )}
         <p className="text-xs text-gray-400 mb-4">Kenteken: {car.license_plate}</p>
 
+        {}
+        <button
+          onClick={onToggleSoldStatus}
+          className={`w-full mb-2 py-2 rounded-xl font-semibold transition-all ${
+            isSold
+              ? 'bg-green-500/80 hover:bg-green-600 text-white'
+              : 'bg-red-500/80 hover:bg-red-600 text-white'
+          }`}
+        >
+          {isSold ? '<- Terug naar actief' : 'Markeer als verkocht'}
+        </button>
+
         <div className="flex gap-3 mb-2">
           <button
             onClick={onEdit}
             className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-xl font-semibold transition-all"
           >
-            Bewerken
+            Prijswijziging
           </button>
           <button
             onClick={onDelete}

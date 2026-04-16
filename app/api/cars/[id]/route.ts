@@ -103,6 +103,7 @@ export async function PUT(
         production_year: body.production_year !== undefined ? (body.production_year ? parseInt(body.production_year) : null) : existingCar.production_year,
         seats: body.seats !== undefined ? (body.seats ? parseInt(body.seats) : null) : existingCar.seats,
         weight: body.weight !== undefined ? (body.weight ? parseInt(body.weight) : null) : existingCar.weight,
+        sold_at: body.sold_at !== undefined ? body.sold_at : existingCar.sold_at,
       },
     });
 
