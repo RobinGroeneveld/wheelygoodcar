@@ -35,16 +35,22 @@ const NAV_ITEMS = [
 
 // Hoofdpagina voor het tonen van alle auto's
 export default function CarsPage() {
+  
   // State voor alle auto's uit de database
   const [cars, setCars] = useState<Car[]>([]);
+
   // Laadstatus voor initiële fetch
   const [loading, setLoading] = useState(true);
+
   // Foutmelding bij mislukte fetch
   const [error, setError] = useState<string | null>(null);
+
   // Geselecteerde auto voor detailweergave (modal)
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+
   // Zoekveld (merk, model, kleur, kenteken)
   const [searchQuery, setSearchQuery] = useState('');
+
   // Maximale prijs filter
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
 

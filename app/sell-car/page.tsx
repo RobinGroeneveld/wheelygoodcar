@@ -242,6 +242,24 @@ export default function SellCarForm() {
       </header>
 
       <main>
+        {/* Progress bar */}
+        <div className="max-w-md mx-auto mt-4 mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <span className={`text-sm font-semibold ${step === 1 ? 'text-cyan-600' : 'text-gray-400'}`}>Stap 1</span>
+            <span className={`text-sm font-semibold ${step === 2 ? 'text-cyan-600' : 'text-gray-400'}`}>Stap 2</span>
+          </div>
+          <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-cyan-500 transition-all duration-500"
+              style={{ width: step === 1 ? '50%' : '100%' }}
+            ></div>
+          </div>
+          <div className="flex justify-between text-xs mt-1 text-gray-400">
+            <span>Kenteken</span>
+            <span>Auto gegevens</span>
+          </div>
+        </div>
+
         {step === 1 ? (
           <form onSubmit={handleLicensePlateSubmit} className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg">
             <h2 className="text-xl font-bold mb-4 text-center">Stap 1: Voer je kenteken in</h2>
