@@ -33,13 +33,13 @@ const NAV_ITEMS = [
   { label: 'Inloggen', href: '/login' }
 ];
 
-// Hoofdpagina voor het tonen van alle auto's
+// Main page for displaying all cars
 export default function CarsPage() {
-  
-  // State voor alle auto's uit de database
+
+  // State for all cars from the database
   const [cars, setCars] = useState<Car[]>([]);
 
-  // Laadstatus voor initiële fetch
+  // Load status for initial fetch
   const [loading, setLoading] = useState(true);
 
   // Foutmelding bij mislukte fetch
@@ -53,6 +53,12 @@ export default function CarsPage() {
 
   // Maximale prijs filter
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
+
+  // Huidige paginanummer (0-indexed)
+  const [currentPage, setCurrentPage] = useState(0);
+
+  // Aantal auto's per pagina
+  const ITEMS_PER_PAGE = 9;
 
   // Haal alle auto's op bij het laden van de pagina
   useEffect(() => {
@@ -76,6 +82,11 @@ export default function CarsPage() {
     };
     fetchCars();
   }, []);
+
+  // Reset paginering als zoekfilter verandert
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchQuery, maxPrice]);
 
   // Wanneer een auto wordt aangeklikt: open modal en verhoog views
   const handleCarClick = async (car: Car) => {
@@ -113,6 +124,31 @@ export default function CarsPage() {
       if (maxPrice && car.price > maxPrice) return false;
       return true;
     });
+  };
+
+  // Bepaal welke auto's willekeurig worden uitgelicht (groter gemaakt)
+  const getCarGridClass = (carId: number, index: number) => {
+    // Zet seed op basis van carId zodat dezelfde auto's altijd dezelfde grootte hebben
+    const seed = (carId * 9973) % 100;
+    const isFeatured = seed < 20; // ~20% van auto's worden subtiel uitgelicht
+    
+    if (isFeatured) {
+      // Subtiel effect: alleen een glow, geen groter formaat
+      return 'ring-1 ring-cyan-400/50';
+    }
+    return '';
+  };
+
+  // Bereken pagina's en haal auto's voor huidige pagina
+  const getPaginatedCars = () => {
+    const filteredCars = getFilteredCars();
+    const startIndex = currentPage * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return {
+      cars: filteredCars.slice(startIndex, endIndex),
+      total: filteredCars.length,
+      totalPages: Math.ceil(filteredCars.length / ITEMS_PER_PAGE),
+    };
   };
 
   return (
@@ -214,10 +250,11 @@ export default function CarsPage() {
                 </div>
               </div>
 
-              {/* Resultaten tonen */}
+              {/* Resultaten tonen met paginering */}
               {(() => {
-                const filteredCars = getFilteredCars();
-                return filteredCars.length === 0 ? (
+                const { cars: paginatedCars, total, totalPages } = getPaginatedCars();
+                
+                return total === 0 ? (
                   <div className="text-center py-20">
                     <p className="text-xl text-white">
                       {cars.length === 0 ? 'Nog geen auto\'s beschikbaar' : 'Geen auto\'s gevonden die aan uw zoekcriteria voldoen'}
@@ -225,11 +262,45 @@ export default function CarsPage() {
                   </div>
                 ) : (
                   <>
-                    <p className="text-gray-300 mb-4">{filteredCars.length} auto's gevonden</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                      {filteredCars.map((car) => (
-                        <CarCard key={car.id} car={car} onClick={() => handleCarClick(car)} />
+                    <p className="text-gray-300 mb-4">{total} auto's gevonden</p>
+                    
+                    {/* Autokaarten grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 auto-rows-max mb-8">
+                      {paginatedCars.map((car, index) => (
+                        <CarCard 
+                          key={car.id} 
+                          car={car} 
+                          onClick={() => handleCarClick(car)}
+                          gridClass={getCarGridClass(car.id, index)}
+                        />
                       ))}
+                    </div>
+
+                    {/* Paginering */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-3 mt-8 p-6 bg-white/5 rounded-xl">
+                      
+                        <div className="flex gap-2">
+                          {Array.from({ length: totalPages }, (_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setCurrentPage(i)}
+                              className={`w-12 h-12 rounded-lg font-bold transition-colors text-lg ${
+                                currentPage === i
+                                  ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/50'
+                                  : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-white/20'
+                              }`}
+                            >
+                              {i + 1}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pagina indicator */}
+                    <div className="text-center mt-4 text-gray-400 text-sm">
+                      Pagina {currentPage + 1} van {totalPages}
                     </div>
                   </>
                 );
@@ -242,7 +313,7 @@ export default function CarsPage() {
       {selectedCar && (
         <CarDetailModal car={selectedCar} onClose={() => setSelectedCar(null)} />
       )}
-    </>
+    </> 
   );
 }
 
