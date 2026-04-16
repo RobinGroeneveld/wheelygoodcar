@@ -4,9 +4,6 @@ import { useEffect, useState } from 'react';
 import BlurText from "../../components/BlurText";
 import PillNav from '../../components/PillNav';
 import Plasma from '../../components/Plasma';
-import { useSession } from "@/app/lib/auth-client";
-import { useRouter } from "next/navigation";
-import ReactPDF from '@react-pdf/renderer';
 
 interface Car {
   id: number;
