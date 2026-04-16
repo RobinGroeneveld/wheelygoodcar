@@ -5,6 +5,13 @@ export async function GET() {
   try {
     const cars = await prisma.cars.findMany({
       orderBy: { created_at: 'desc' },
+      include: {
+        car_tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
     });
     return NextResponse.json(cars);
   } catch (error) {

@@ -5,6 +5,12 @@ import BlurText from "../../components/BlurText";
 import PillNav from '../../components/PillNav';
 import Plasma from '../../components/Plasma';
 
+interface Tag {
+  id: number;
+  name: string;
+  color: string;
+}
+
 interface Car {
   id: number;
   license_plate: string;
@@ -21,6 +27,7 @@ interface Car {
   views: number;
   created_at: string;
   sold_at?: string | null;
+  car_tags?: Array<{ tag: Tag }>;
 }
 
 const NAV_ITEMS = [
@@ -60,6 +67,12 @@ export default function CarsPage() {
   // Aantal auto's per pagina
   const ITEMS_PER_PAGE = 9;
 
+  // Alle beschikbare tags
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+
+  // Geselecteerde tags voor filtering
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
+
   // Haal alle auto's op bij het laden van de pagina
   useEffect(() => {
     const fetchCars = async () => {
@@ -69,6 +82,16 @@ export default function CarsPage() {
 
         if (Array.isArray(data)) {
           setCars(data);
+          // Extraheer unieke tags uit alle auto's
+          const tagsSet = new Map<number, Tag>();
+          data.forEach((car: Car) => {
+            if (car.car_tags) {
+              car.car_tags.forEach((ct) => {
+                tagsSet.set(ct.tag.id, ct.tag);
+              });
+            }
+          });
+          setAllTags(Array.from(tagsSet.values()));
         } else {
           setError(data.error || 'Kon auto\'s niet laden.');
           setCars([]);
@@ -86,7 +109,7 @@ export default function CarsPage() {
   // Reset paginering als zoekfilter verandert
   useEffect(() => {
     setCurrentPage(0);
-  }, [searchQuery, maxPrice]);
+  }, [searchQuery, maxPrice, selectedTags]);
 
   // Wanneer een auto wordt aangeklikt: open modal en verhoog views
   const handleCarClick = async (car: Car) => {
@@ -106,7 +129,7 @@ export default function CarsPage() {
     }
   };
 
-  // Filter auto's op basis van zoekopdracht en prijs
+  // Filter auto's op basis van zoekopdracht, prijs en tags
   const getFilteredCars = () => {
     return cars.filter(car => {
       if (car.sold_at) return false; // Verkochte auto's niet tonen
@@ -122,6 +145,12 @@ export default function CarsPage() {
       }
       // Prijsfilter
       if (maxPrice && car.price > maxPrice) return false;
+      // Tagfilter: als tags geselecteerd zijn, moet auto minstens 1 van die tags hebben
+      if (selectedTags.length > 0) {
+        const carTagIds = car.car_tags?.map(ct => ct.tag.id) || [];
+        const hasSelectedTag = selectedTags.some(tagId => carTagIds.includes(tagId));
+        if (!hasSelectedTag) return false;
+      }
       return true;
     });
   };
@@ -248,6 +277,44 @@ export default function CarsPage() {
                     </button>
                   )}
                 </div>
+
+                {/* Tag filter */}
+                {allTags.length > 0 && (
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-2">
+                      Filteren op tag{selectedTags.length > 0 ? `s (${selectedTags.length} geselecteerd)` : 's'}:
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {allTags.map((tag) => (
+                        <button
+                          key={tag.id}
+                          onClick={() => {
+                            setSelectedTags(
+                              selectedTags.includes(tag.id)
+                                ? selectedTags.filter(t => t !== tag.id)
+                                : [...selectedTags, tag.id]
+                            );
+                          }}
+                          className={`px-4 py-2 rounded-full font-medium transition-all ${
+                            selectedTags.includes(tag.id)
+                              ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/50'
+                              : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-white/20'
+                          }`}
+                        >
+                          {tag.name}
+                        </button>
+                      ))}
+                    </div>
+                    {selectedTags.length > 0 && (
+                      <button
+                        onClick={() => setSelectedTags([])}
+                        className="mt-2 text-sm text-cyan-400 hover:text-cyan-300"
+                      >
+                        Tags wissen
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Resultaten tonen met paginering */}
