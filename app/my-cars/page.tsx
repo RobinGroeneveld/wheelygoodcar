@@ -25,6 +25,12 @@ interface Car {
   sold_at?: string | null;
 }
 
+interface Tag {
+  id: number;
+  name: string;
+  color: string;
+}
+
 const NAV_ITEMS = [
   { label: 'Home', href: '/' },
   { label: 'Auto verkopen', href: '/sell-car' },
@@ -340,6 +346,44 @@ function EditCarModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(car.image || null);
   const [uploading, setUploading] = useState(false);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [tagsLoading, setTagsLoading] = useState(true);
+  const [savingTags, setSavingTags] = useState(false);
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch('/api/tags');
+        if (response.ok) {
+          const tags = await response.json();
+          setAvailableTags(tags);
+        }
+      } catch (error) {
+        console.error('Error fetching tags:', error);
+      } finally {
+        setTagsLoading(false);
+      }
+    };
+
+    fetchTags();
+  }, []);
+
+  useEffect(() => {
+    const fetchCarTags = async () => {
+      try {
+        const response = await fetch(`/api/cars/${car.id}/tags`);
+        if (response.ok) {
+          const data = await response.json();
+          setSelectedTags(data.tagIds || []);
+        }
+      } catch (error) {
+        console.error('Error fetching car tags:', error);
+      }
+    };
+
+    fetchCarTags();
+  }, [car.id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -353,6 +397,14 @@ function EditCarModal({
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
     }
+  };
+
+  const toggleTag = (tagId: number) => {
+    setSelectedTags(prev =>
+      prev.includes(tagId)
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -390,13 +442,36 @@ function EditCarModal({
     }
 
     setUploading(false);
+    
+    // Save car data
     onSave({ ...formData, image: imageUrl });
+
+    // Save tags
+    if (selectedTags.length > 0 || true) {
+      setSavingTags(true);
+      try {
+        const response = await fetch(`/api/cars/${car.id}/tags`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tagIds: selectedTags }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Error saving tags:', errorData);
+        }
+      } catch (error) {
+        console.error('Error saving tags:', error);
+      } finally {
+        setSavingTags(false);
+      }
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-gray-900 border border-white/20 rounded-2xl p-6 max-w-2xl w-full my-8">
-        <div className="flex justify-between items-center mb-6">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-white/20 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 sticky top-0 bg-gray-900 border-b border-white/20 flex justify-between items-center">
           <h3 className="text-xl font-bold text-white">Auto bewerken</h3>
           <button
             onClick={onClose}
@@ -406,7 +481,7 @@ function EditCarModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="edit-car-form" onSubmit={handleSubmit} className="space-y-4 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Merk</label>
@@ -552,23 +627,60 @@ function EditCarModal({
             </label>
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl font-semibold transition-all"
-            >
-              Annuleren
-            </button>
-            <button
-              type="submit"
-              disabled={saving || uploading}
-              className="flex-1 bg-cyan-500 hover:bg-cyan-600 disabled:bg-cyan-800 text-white py-3 rounded-xl font-semibold transition-all"
-            >
-              {uploading ? 'Uploaden...' : saving ? 'Opslaan...' : 'Opslaan'}
-            </button>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Tags</label>
+            {tagsLoading ? (
+              <div className="text-center py-4">
+                <p className="text-gray-400 text-sm">Tags laden...</p>
+              </div>
+            ) : availableTags.length > 0 ? (
+              <div className="space-y-2 bg-white/5 p-3 rounded-xl border border-white/10">
+                {availableTags.map((tag) => (
+                  <label
+                    key={tag.id}
+                    className="flex items-center p-2 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedTags.includes(tag.id)}
+                      onChange={() => toggleTag(tag.id)}
+                      className="w-4 h-4 text-cyan-500 border-gray-300 rounded focus:ring-cyan-500"
+                    />
+                    <span className="ml-3 flex-1 text-gray-300">{tag.name}</span>
+                    <span
+                      className="px-2 py-1 rounded text-xs text-white"
+                      style={{ backgroundColor: tag.color }}
+                    >
+                      {tag.color}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-400 text-sm">Geen tags beschikbaar</p>
+              </div>
+            )}
           </div>
         </form>
+
+        <div className="sticky bottom-0 bg-gray-900 border-t border-white/20 p-6 flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl font-semibold transition-all"
+          >
+            Annuleren
+          </button>
+          <button
+            type="submit"
+            form="edit-car-form"
+            disabled={saving || uploading || savingTags}
+            className="flex-1 bg-cyan-500 hover:bg-cyan-600 disabled:bg-cyan-800 text-white py-3 rounded-xl font-semibold transition-all"
+          >
+            {uploading ? 'Uploaden...' : saving || savingTags ? 'Opslaan...' : 'Opslaan'}
+          </button>
+        </div>
       </div>
     </div>
   );

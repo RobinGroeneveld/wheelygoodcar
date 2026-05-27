@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "WheelyGoodCars | De plek om jouw auto te verkopen",
   description: "Ontdek en verkoop prachtige auto's en beheer jouw aanbiedingen gemakkelijk",
+  icons: {
+    icon: '/favicon.ico',
+  },
+
 };
 
 export default function RootLayout({
