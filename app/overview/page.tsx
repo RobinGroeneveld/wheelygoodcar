@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import BlurText from "../../components/BlurText";
 import PillNav from '../../components/PillNav';
 import Plasma from '../../components/Plasma';
+import Toast from '../../components/Toast';
 
 interface Tag {
   id: number;
@@ -49,31 +50,31 @@ export default function CarsPage() {
   // Load status for initial fetch
   const [loading, setLoading] = useState(true);
 
-  // Foutmelding bij mislukte fetch
+  // Error message for failed fetch
   const [error, setError] = useState<string | null>(null);
-
-  // Geselecteerde auto voor detailweergave (modal)
+  
+  // Selected car for detail view (modal)
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
 
-  // Zoekveld (merk, model, kleur, kenteken)
+  // Search field (make, model, color, license plate)/ Zoekveld (merk, model, kleur, kenteken)
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Maximale prijs filter
+  // Maximum price filter
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
 
-  // Huidige paginanummer (0-indexed)
+  // Current page number (0-indexed)
   const [currentPage, setCurrentPage] = useState(0);
 
-  // Aantal auto's per pagina
+  // Number of cars per page
   const ITEMS_PER_PAGE = 9;
 
-  // Alle beschikbare tags
+  // All available tags
   const [allTags, setAllTags] = useState<Tag[]>([]);
 
-  // Geselecteerde tags voor filtering
+  // Selected tags for filtering
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
-  // Haal alle auto's op bij het laden van de pagina
+  // Retrieve all cars when the page loads
   useEffect(() => {
     const fetchCars = async () => {
       try {
@@ -82,7 +83,8 @@ export default function CarsPage() {
 
         if (Array.isArray(data)) {
           setCars(data);
-          // Extraheer unieke tags uit alle auto's
+          
+          // Extract unique tags from all cars
           const tagsSet = new Map<number, Tag>();
           data.forEach((car: Car) => {
             if (car.car_tags) {
@@ -106,12 +108,10 @@ export default function CarsPage() {
     fetchCars();
   }, []);
 
-  // Reset paginering als zoekfilter verandert
   useEffect(() => {
     setCurrentPage(0);
   }, [searchQuery, maxPrice, selectedTags]);
 
-  // Wanneer een auto wordt aangeklikt: open modal en verhoog views
   const handleCarClick = async (car: Car) => {
     setSelectedCar(car);
     try {
@@ -129,11 +129,10 @@ export default function CarsPage() {
     }
   };
 
-  // Filter auto's op basis van zoekopdracht, prijs en tags
   const getFilteredCars = () => {
     return cars.filter(car => {
-      if (car.sold_at) return false; // Verkochte auto's niet tonen
-      // Zoekfilter: merk, model, kleur, kenteken
+      if (car.sold_at) return false; 
+    
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesSearch = 
@@ -143,9 +142,8 @@ export default function CarsPage() {
           car.license_plate.toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
-      // Prijsfilter
+      
       if (maxPrice && car.price > maxPrice) return false;
-      // Tagfilter: als tags geselecteerd zijn, moet auto minstens 1 van die tags hebben
       if (selectedTags.length > 0) {
         const carTagIds = car.car_tags?.map(ct => ct.tag.id) || [];
         const hasSelectedTag = selectedTags.some(tagId => carTagIds.includes(tagId));
@@ -155,14 +153,11 @@ export default function CarsPage() {
     });
   };
 
-  // Bepaal welke auto's willekeurig worden uitgelicht (groter gemaakt)
   const getCarGridClass = (carId: number, index: number) => {
-    // Zet seed op basis van carId zodat dezelfde auto's altijd dezelfde grootte hebben
     const seed = (carId * 9973) % 100;
-    const isFeatured = seed < 20; // ~20% van auto's worden subtiel uitgelicht
+    const isFeatured = seed < 20; 
     
     if (isFeatured) {
-      // Subtiel effect: alleen een glow, geen groter formaat
       return 'ring-1 ring-cyan-400/50';
     }
     return '';
@@ -220,7 +215,7 @@ export default function CarsPage() {
         </header>
 
         <main className="container mx-auto px-4 py-12">
-          {/* Hoofdcontent: laden, foutmelding of resultaten */}
+          {}
           {loading ? (
             <div className="text-center py-20">
               <p className="text-xl text-white">Laden...</p>
@@ -231,9 +226,9 @@ export default function CarsPage() {
             </div>
           ) : (
             <>
-              {/* Zoek- en filtersectie */}
+              {}
               <div className="mb-8 space-y-4">
-                {/* Zoekbalk voor merk, model, kleur, kenteken */}
+                {}
                 <div className="relative">
                   <input
                     type="text"
@@ -384,13 +379,13 @@ export default function CarsPage() {
   );
 }
 
-function CarCard({ car, onClick }: { car: Car; onClick: () => void }) {
+function CarCard({ car, onClick, gridClass }: { car: Car; onClick: () => void; gridClass?: string }) {
   const [imageError, setImageError] = useState(false);
   
   return (
     <div 
       onClick={onClick}
-      className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
+      className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer ${gridClass || ''}`}
     >
       {car.image && !imageError ? (
         <img
@@ -446,6 +441,20 @@ function CarCard({ car, onClick }: { car: Car; onClick: () => void }) {
 
 function CarDetailModal({ car, onClose }: { car: Car; onClose: () => void }) {
   const [imageError, setImageError] = useState(false);
+  const [showViewsToast, setShowViewsToast] = useState(false);
+
+  useEffect(() => {
+    // Toon toast na 10 seconden
+    const timer = setTimeout(() => {
+      setShowViewsToast(true);
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleDismissToast = () => {
+    setShowViewsToast(false);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -518,6 +527,15 @@ function CarDetailModal({ car, onClose }: { car: Car; onClose: () => void }) {
           </button>
         </div>
       </div>
+
+      {/* Views Toast - toont na 10 seconden */}
+      {showViewsToast && (
+        <Toast
+          message={`${car.views} ${car.views === 1 ? 'klant heeft' : 'klanten hebben'} deze auto vandaag bekeken`}
+          autoDismiss={6000}
+          onDismiss={handleDismissToast}
+        />
+      )}
     </div>
   );
 }

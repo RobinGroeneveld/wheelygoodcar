@@ -27,12 +27,21 @@ type RdwVehicleResponse = {
   source: 'RDW';
 };
 
+type Tag = {
+  id: number;
+  name: string;
+  color: string;
+};
+
 export default function SellCarForm() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
 
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [uploading, setUploading] = useState(false);
+  const [createdCarId, setCreatedCarId] = useState<number | null>(null);
+  const [tagsLoading, setTagsLoading] = useState(false);
+  const [savingTags, setSavingTags] = useState(false);
 
   const [price, setPrice] = useState("");
   const [mileage, setMileage] = useState("");
@@ -49,6 +58,9 @@ export default function SellCarForm() {
   const [weight, setWeight] = useState("");
   const [rdwLoading, setRdwLoading] = useState(false);
   const [rdwMessage, setRdwMessage] = useState<string | null>(null);
+  
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
   const floatingLinesBackground = useMemo(() => (
     <div className="fixed top-0 left-0 w-screen h-screen -z-10 pointer-events-none">
@@ -73,6 +85,25 @@ export default function SellCarForm() {
       router.push("/login");
     }
   }, [session, isPending, router]);
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      setTagsLoading(true);
+      try {
+        const response = await fetch('/api/tags');
+        if (response.ok) {
+          const tags = await response.json();
+          setAvailableTags(tags);
+        }
+      } catch (error) {
+        console.error('Error fetching tags:', error);
+      } finally {
+        setTagsLoading(false);
+      }
+    };
+
+    fetchTags();
+  }, []);
 
 
   if (isPending) {
@@ -128,7 +159,7 @@ export default function SellCarForm() {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      // Maak preview URL
+      
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
     }
@@ -140,7 +171,7 @@ export default function SellCarForm() {
     
     let imageUrl = '';
 
-    // Upload afbeelding eerst als er een is
+    
     if (imageFile) {
       try {
         const formData = new FormData();
@@ -184,14 +215,8 @@ export default function SellCarForm() {
       const data = await response.json();
 
       if (response.ok) {
-        alert('Auto succesvol toegevoegd!');
-        setPrice(''); setMileage(''); setColor(''); setDoors('');
-        setImage(''); setImageFile(null); setImagePreview(null);
-        setLicense_Plate(''); setMake(''); setModel('');
-        setProduction_Year(''); setSeats(''); setWeight('');
-        setRdwMessage(null);
-        setStep(1);
-        router.push('/my-cars');
+        setCreatedCarId(data.car.id);
+        setStep(3);
       } else {
         alert(`Fout: ${data.error}`);
       }
@@ -201,6 +226,48 @@ export default function SellCarForm() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleSaveTags = async () => {
+    if (!createdCarId) return;
+    
+    setSavingTags(true);
+    try {
+      const response = await fetch(`/api/cars/${createdCarId}/tags`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tagIds: selectedTags }),
+      });
+
+      if (response.ok) {
+        alert('Auto succesvol toegevoegd met tags!');
+        setPrice(''); setMileage(''); setColor(''); setDoors('');
+        setImage(''); setImageFile(null); setImagePreview(null);
+        setLicense_Plate(''); setMake(''); setModel('');
+        setProduction_Year(''); setSeats(''); setWeight('');
+        setRdwMessage(null);
+        setCreatedCarId(null);
+        setSelectedTags([]);
+        setStep(1);
+        router.push('/my-cars');
+      } else {
+        const errorData = await response.json();
+        alert(`Fout bij opslaan tags: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error saving tags:', error);
+      alert('Er is een fout opgetreden bij het opslaan van tags');
+    } finally {
+      setSavingTags(false);
+    }
+  };
+
+  const toggleTag = (tagId: number) => {
+    setSelectedTags(prev =>
+      prev.includes(tagId)
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
   };
 
   return (
@@ -242,21 +309,23 @@ export default function SellCarForm() {
       </header>
 
       <main>
-        {/* Progress bar */}
+        {}
         <div className="max-w-md mx-auto mt-4 mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className={`text-sm font-semibold ${step === 1 ? 'text-cyan-600' : 'text-gray-400'}`}>Stap 1</span>
             <span className={`text-sm font-semibold ${step === 2 ? 'text-cyan-600' : 'text-gray-400'}`}>Stap 2</span>
+            <span className={`text-sm font-semibold ${step === 3 ? 'text-cyan-600' : 'text-gray-400'}`}>Stap 3</span>
           </div>
           <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
             <div
               className="h-full bg-cyan-500 transition-all duration-500"
-              style={{ width: step === 1 ? '50%' : '100%' }}
+              style={{ width: step === 1 ? '33.33%' : step === 2 ? '66.66%' : '100%' }}
             ></div>
           </div>
           <div className="flex justify-between text-xs mt-1 text-gray-400">
             <span>Kenteken</span>
             <span>Auto gegevens</span>
+            <span>Tags</span>
           </div>
         </div>
 
@@ -284,7 +353,7 @@ export default function SellCarForm() {
               {rdwLoading ? 'RDW-gegevens ophalen...' : 'Volgende stap →'}
             </button>
           </form>
-        ) : (
+        ) : step === 2 ? (
           <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg space-y-4">
             <div className="flex items-center justify-between mb-4">
               <button
@@ -373,7 +442,70 @@ export default function SellCarForm() {
             </div>
 
             <button type="submit" disabled={uploading} className="bg-cyan-500 text-white px-4 py-3 rounded-lg hover:bg-cyan-600 disabled:bg-cyan-300 w-full font-semibold transition-all">
-              {uploading ? 'Bezig met uploaden...' : 'Auto toevoegen'}
+              {uploading ? 'Bezig met uploaden...' : 'Volgende stap →'}
+            </button>
+          </form>
+        ) : (
+          <form className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep(2);
+                  setCreatedCarId(null);
+                }}
+                className="text-cyan-500 hover:text-cyan-700 font-medium"
+              >
+                ← Terug
+              </button>
+              <h2 className="text-xl font-bold">Stap 3: Voeg tags toe</h2>
+              <div className="w-16"></div>
+            </div>
+
+            <p className="text-gray-600 text-sm text-center mb-4">
+              Selecteer tags die van toepassing zijn op je auto.
+            </p>
+
+            {tagsLoading ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Tags laden...</p>
+              </div>
+            ) : availableTags.length > 0 ? (
+              <div className="space-y-2">
+                {availableTags.map((tag) => (
+                  <label
+                    key={tag.id}
+                    className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedTags.includes(tag.id)}
+                      onChange={() => toggleTag(tag.id)}
+                      className="w-4 h-4 text-cyan-500 border-gray-300 rounded focus:ring-cyan-500"
+                    />
+                    <span className="ml-3 flex-1">{tag.name}</span>
+                    <span
+                      className="px-2 py-1 rounded text-xs text-white"
+                      style={{ backgroundColor: tag.color }}
+                    >
+                      {tag.color}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Geen tags beschikbaar</p>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSaveTags}
+              disabled={savingTags}
+              className="bg-cyan-500 text-white px-4 py-3 rounded-lg hover:bg-cyan-600 disabled:bg-cyan-300 w-full font-semibold transition-all"
+            >
+              {savingTags ? 'Bezig met opslaan...' : 'Auto voltooien'}
             </button>
           </form>
         )}
