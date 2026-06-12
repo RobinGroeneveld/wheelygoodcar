@@ -32,6 +32,7 @@ export default function Page() {
                 { label: "Mijn auto's", href: '/my-cars' },
                 {label: 'admin', href: '/admin/tag-stats'},
                 {label: 'Admin Top Cars', href: '/admin-top-cars'},
+                {label: 'Admin Dashboard', href: '/dashboard'},
                 { label: 'Inloggen', href: '/login' }
               ]}
               activeHref="/"

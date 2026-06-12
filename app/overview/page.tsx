@@ -433,6 +433,18 @@ function CarCard({ car, onClick, gridClass }: { car: Car; onClick: () => void; g
             <span className="font-semibold">Kleur:</span> {car.color}
           </p>
         )}
+        {car.car_tags && car.car_tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {car.car_tags.map((carTag) => (
+            <span
+              key={carTag.tag.id}
+              className="px-3 py-1 rounded-full text-xs font-medium bg-cyan-500 text-white"
+            >
+              {carTag.tag.name}
+            </span>
+          ))}
+        </div>
+      )}
         <p className="text-xs text-gray-400 mb-4">Kenteken: {car.license_plate}</p>
       </div>
     </div>
