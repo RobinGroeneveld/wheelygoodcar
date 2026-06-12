@@ -84,7 +84,6 @@ export default function CarsPage() {
         if (Array.isArray(data)) {
           setCars(data);
           
-          // Extract unique tags from all cars
           const tagsSet = new Map<number, Tag>();
           data.forEach((car: Car) => {
             if (car.car_tags) {
@@ -163,7 +162,6 @@ export default function CarsPage() {
     return '';
   };
 
-  // Bereken pagina's en haal auto's voor huidige pagina
   const getPaginatedCars = () => {
     const filteredCars = getFilteredCars();
     const startIndex = currentPage * ITEMS_PER_PAGE;
@@ -192,14 +190,24 @@ export default function CarsPage() {
         <header className="pt-8">
           <div className="flex justify-center">
             <PillNav
-              logo="/images/logo.png"
-              items={NAV_ITEMS}
-              activeHref="/overview"
+                logo="/images/logo.png"
+              items={[
+                { label: 'Home', href: '/' },
+                { label: 'Auto verkopen', href: '/sell-car' },
+                { label: "Overzicht alle auto's", href: '/overview' },
+                { label: "Mijn auto's", href: '/my-cars' },
+                {label: 'admin', href: '/admin/tag-stats'},
+                {label: 'Admin Top Cars', href: '/admin-top-cars'},
+                {label: 'Admin Dashboard', href: '/admin-dashboard-overview'},
+                { label: 'Inloggen', href: '/login' }
+              ]}
+              activeHref="/"
+              className="custom-nav"
               ease="power2.easeOut"
               baseColor="#000000"
               pillColor="#ffffff"
-              hoveredPillTextColor="#000000"
-              pillTextColor="#6b7280"
+              hoveredPillTextColor="#ffffff"
+              pillTextColor="#000000"
               initialLoadAnimation={false}
             />
           </div>

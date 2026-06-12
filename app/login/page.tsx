@@ -75,9 +75,19 @@ export default function LoginPage() {
         <header className="pt-8">
           <div className="flex justify-center">
             <PillNav
-              logo="/images/logo.png"
-              items={NAV_ITEMS}
-              activeHref="/login"
+               logo="/images/logo.png"
+              items={[
+                { label: 'Home', href: '/' },
+                { label: 'Auto verkopen', href: '/sell-car' },
+                { label: "Overzicht alle auto's", href: '/overview' },
+                { label: "Mijn auto's", href: '/my-cars' },
+                {label: 'admin', href: '/admin/tag-stats'},
+                {label: 'Admin Top Cars', href: '/admin-top-cars'},
+                {label: 'Admin Dashboard', href: '/admin-dashboard-overview'},
+                { label: 'Inloggen', href: '/login' }
+              ]}
+              activeHref="/"
+              className="custom-nav"
               ease="power2.easeOut"
               baseColor="#000000"
               pillColor="#ffffff"

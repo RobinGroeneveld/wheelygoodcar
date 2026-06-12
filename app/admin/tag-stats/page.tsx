@@ -32,14 +32,15 @@ export default function AdminTagStatsPage() {
                 <header className="pt-20">
                     <div className="flex justify-center gap-8 mt-20">
                         <PillNav
-                            logo="/images/logo.png"
+                           logo="/images/logo.png"
                             items={[
-                                 { label: 'Home', href: '/' },
+                                { label: 'Home', href: '/' },
                                 { label: 'Auto verkopen', href: '/sell-car' },
                                 { label: "Overzicht alle auto's", href: '/overview' },
                                 { label: "Mijn auto's", href: '/my-cars' },
                                 {label: 'admin', href: '/admin/tag-stats'},
                                 {label: 'Admin Top Cars', href: '/admin-top-cars'},
+                                {label: 'Admin Dashboard', href: '/admin-dashboard-overview'},
                                 { label: 'Inloggen', href: '/login' }
                             ]}
                             activeHref="/admin/tag-stats"

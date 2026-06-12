@@ -277,23 +277,25 @@ export default function SellCarForm() {
       <header>
         <div className="flex justify-center gap-8 mt-20">
           <PillNav
-            logo="/images/logo.png"
-            items={[
-               { label: 'Home', href: '/' },
+              logo="/images/logo.png"
+              items={[
+                { label: 'Home', href: '/' },
                 { label: 'Auto verkopen', href: '/sell-car' },
                 { label: "Overzicht alle auto's", href: '/overview' },
                 { label: "Mijn auto's", href: '/my-cars' },
                 {label: 'admin', href: '/admin/tag-stats'},
                 {label: 'Admin Top Cars', href: '/admin-top-cars'},
+                {label: 'Admin Dashboard', href: '/admin-dashboard-overview'},
                 { label: 'Inloggen', href: '/login' }
-            ]}
-            activeHref="/sell-car"
-            ease="power2.easeOut"
-            baseColor="#000000"
-            pillColor="#ffffff"
-            hoveredPillTextColor="#ffffff"
-            pillTextColor="#000000"
-            initialLoadAnimation={false}
+              ]}
+              activeHref="/"
+              className="custom-nav"
+              ease="power2.easeOut"
+              baseColor="#000000"
+              pillColor="#ffffff"
+              hoveredPillTextColor="#ffffff"
+              pillTextColor="#000000"
+              initialLoadAnimation={false}
           />
         </div>
         <div className="flex justify-center mt-10">

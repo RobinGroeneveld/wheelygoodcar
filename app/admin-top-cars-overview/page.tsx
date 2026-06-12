@@ -7,9 +7,8 @@ export default function AdminTopCarsOverviewPage() {
     return (
         <>
             <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-                <div style={{ maxWidth: 1100, width: '100%' }}>
-                    <PillNav
-                        logo=""
+                <PillNav
+                        logo="/images/logo.png"
                         items={[
                             { label: 'Home', href: '/' },
                             { label: 'Auto verkopen', href: '/sell-car' },
@@ -17,9 +16,10 @@ export default function AdminTopCarsOverviewPage() {
                             { label: "Mijn auto's", href: '/my-cars' },
                             {label: 'admin', href: '/admin/tag-stats'},
                             {label: 'Admin Top Cars', href: '/admin-top-cars'},
+                            {label: 'Admin Dashboard', href: '/admin-dashboard-overview'},
                             { label: 'Inloggen', href: '/login' }
                         ]}
-                        activeHref="/admin-top-cars-overview"
+                        activeHref="/"
                         className="custom-nav"
                         ease="power2.easeOut"
                         baseColor="#000000"
@@ -28,7 +28,6 @@ export default function AdminTopCarsOverviewPage() {
                         pillTextColor="#000000"
                         initialLoadAnimation={false}
                     />
-                </div>
             </div>
             <div className="tekst-overzicht-top" >
                 <div className="container" style={{marginTop: 40, justifyContent: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
