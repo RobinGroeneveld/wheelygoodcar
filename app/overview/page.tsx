@@ -66,7 +66,7 @@ export default function CarsPage() {
   const [currentPage, setCurrentPage] = useState(0);
 
   // Number of cars per page
-  const ITEMS_PER_PAGE = 9;
+  const ITEMS_PER_PAGE = 10;
 
   // All available tags
   const [allTags, setAllTags] = useState<Tag[]>([]);
@@ -152,14 +152,18 @@ export default function CarsPage() {
     });
   };
 
-  const getCarGridClass = (carId: number, index: number) => {
+    const getCarGridClass = (carId: number) => {
     const seed = (carId * 9973) % 100;
-    const isFeatured = seed < 20; 
-    
-    if (isFeatured) {
-      return 'ring-1 ring-cyan-400/50';
+
+    if (seed < 20) {
+      return "md:col-span-2 ring-2 ring-cyan-400/50";
     }
-    return '';
+
+    return "";
+  };
+
+  const isFeaturedCar = (carId: number) => {
+    return ((carId * 9973) % 100) < 20;
   };
 
   const getPaginatedCars = () => {
@@ -255,7 +259,7 @@ export default function CarsPage() {
                   )}
                 </div>
 
-                {/* Prijsfilter slider */}
+                {}
                 <div className="flex gap-4 items-end">
                   <div className="flex-1">
                     <label className="block text-sm text-gray-300 mb-2">
@@ -281,7 +285,7 @@ export default function CarsPage() {
                   )}
                 </div>
 
-                {/* Tag filter */}
+                {}
                 {allTags.length > 0 && (
                   <div>
                     <label className="block text-sm text-gray-300 mb-2">
@@ -320,10 +324,13 @@ export default function CarsPage() {
                 )}
               </div>
 
-              {/* Resultaten tonen met paginering */}
+              {}
               {(() => {
                 const { cars: paginatedCars, total, totalPages } = getPaginatedCars();
-                
+
+                const featuredCar = paginatedCars.length > 0 ? paginatedCars[0] : null;
+                const normalCars = paginatedCars.slice(1);
+                                
                 return total === 0 ? (
                   <div className="text-center py-20">
                     <p className="text-xl text-white">
@@ -334,19 +341,32 @@ export default function CarsPage() {
                   <>
                     <p className="text-gray-300 mb-4">{total} auto's gevonden</p>
                     
-                    {/* Autokaarten grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 auto-rows-max mb-8">
-                      {paginatedCars.map((car, index) => (
-                        <CarCard 
-                          key={car.id} 
-                          car={car} 
-                          onClick={() => handleCarClick(car)}
-                          gridClass={getCarGridClass(car.id, index)}
-                        />
-                      ))}
-                    </div>
+                    {}
+                     <>
+                      {featuredCar && (
+                        <div className="mb-8">
+                          <CarCard
+                            key={featuredCar.id}
+                            car={featuredCar}
+                            featured
+                            onClick={() => handleCarClick(featuredCar)}
+                          />
+                        </div>
+                      )}
 
-                    {/* Paginering */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                        {normalCars.map((car) => (
+                          <CarCard
+                            key={car.id}
+                            car={car}
+                            featured={false}
+                            onClick={() => handleCarClick(car)}
+                          />
+                        ))}
+                      </div>
+                    </>
+
+                    {}
                     {totalPages > 1 && (
                       <div className="flex items-center justify-center gap-3 mt-8 p-6 bg-white/5 rounded-xl">
                       
@@ -368,7 +388,7 @@ export default function CarsPage() {
                       </div>
                     )}
 
-                    {/* Pagina indicator */}
+                    {}
                     <div className="text-center mt-4 text-gray-400 text-sm">
                       Pagina {currentPage + 1} van {totalPages}
                     </div>
@@ -387,177 +407,163 @@ export default function CarsPage() {
   );
 }
 
-function CarCard({ car, onClick, gridClass }: { car: Car; onClick: () => void; gridClass?: string }) {
+function CarCard({car,onClick,gridClass,featured}: {car: Car;onClick: () => void;gridClass?: string;featured?: boolean;}){
   const [imageError, setImageError] = useState(false);
   
-  return (
-    <div 
-      onClick={onClick}
-      className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer ${gridClass || ''}`}
-    >
-      {car.image && !imageError ? (
-        <img
-          src={car.image}
-          alt={`${car.make} ${car.model}`}
-          className="w-full h-56 object-cover"
-          onError={() => setImageError(true)}
-        />
-      ) : (
-        <div className="w-full h-56 bg-white/10 flex items-center justify-center">
-          <span className="text-6xl">🚗</span>
-        </div>
-      )}
-
-      <div className="p-6">
-        <h2 className="text-2xl font-bold text-white mb-1">
-          {car.make} {car.model}
-        </h2>
-        <p className="text-gray-300 mb-4">{car.production_year}</p>
-
-        <div className="mb-4">
-          <p className="text-3xl font-bold text-green-400">
-            € {Number(car.price).toLocaleString('nl-NL')}
-          </p>
-          <p className="text-sm text-gray-300 mt-1">
-            {car.mileage.toLocaleString('nl-NL')} km
-          </p>
-        </div>
-
-        <div className="flex gap-3 mb-4 flex-wrap">
-          {car.doors && (
-            <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium">
-              {car.doors} deuren
-            </span>
-          )}
-          {car.seats && (
-            <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium">
-              {car.seats} zitplaatsen
-            </span>
-          )}
-        </div>
-
-        {car.color && (
-          <p className="text-sm text-gray-300 mb-2">
-            <span className="font-semibold">Kleur:</span> {car.color}
-          </p>
-        )}
-        {car.car_tags && car.car_tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          {car.car_tags.map((carTag) => (
-            <span
-              key={carTag.tag.id}
-              className="px-3 py-1 rounded-full text-xs font-medium bg-cyan-500 text-white"
-            >
-              {carTag.tag.name}
-            </span>
-          ))}
-        </div>
-      )}
-        <p className="text-xs text-gray-400 mb-4">Kenteken: {car.license_plate}</p>
-      </div>
-    </div>
-  );
-}
-
-function CarDetailModal({ car, onClose }: { car: Car; onClose: () => void }) {
-  const [imageError, setImageError] = useState(false);
-  const [showViewsToast, setShowViewsToast] = useState(false);
-
-  useEffect(() => {
-    // Toon toast na 10 seconden
-    const timer = setTimeout(() => {
-      setShowViewsToast(true);
-    }, 10000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleDismissToast = () => {
-    setShowViewsToast(false);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div 
-        className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header met close button */}
-        <div className="sticky top-0 flex justify-between items-center p-6 border-b border-white/10 bg-slate-900/80 backdrop-blur">
-          <h2 className="text-2xl font-bold text-white">
-            {car.make} {car.model}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors text-2xl"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Image */}
+ return (
+  <div
+    onClick={onClick}
+    className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer ${gridClass || ''}`}
+  >
+    {featured ? (
+      <div className="grid md:grid-cols-2">
+        <div>
           {car.image && !imageError ? (
             <img
               src={car.image}
               alt={`${car.make} ${car.model}`}
-              className="w-full h-80 object-cover rounded-2xl"
+              className="w-full h-full max-h-[420px] object-cover"
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="w-full h-80 bg-white/10 flex items-center justify-center rounded-2xl">
-              <span className="text-8xl">🚗</span>
+            <div className="h-[420px] flex items-center justify-center">
+              🚗
             </div>
           )}
+        </div>
 
-          {/* Price */}
-          <div className="bg-green-500/20 border border-green-500/50 rounded-xl p-4">
-            <p className="text-green-400 text-sm font-semibold mb-1">Prijs</p>
-            <p className="text-4xl font-bold text-green-400">
+        <div className="p-8 flex flex-col justify-between">
+          <div>
+            <div className="inline-block mb-4 px-3 py-1 rounded-full bg-cyan-500 text-white text-sm font-bold">
+              Uitgelicht
+            </div>
+
+            <h2 className="text-4xl font-bold text-white mb-2">
+              {car.make} {car.model}
+            </h2>
+
+            <p className="text-gray-300 mb-6">
+              {car.production_year}
+            </p>
+
+            <p className="text-5xl font-bold text-green-400 mb-4">
               € {Number(car.price).toLocaleString('nl-NL')}
             </p>
-          </div>
 
-          {/* Views Count */}
-          <div className="bg-blue-500/20 border border-blue-500/50 rounded-xl p-4">
-            <p className="text-blue-400 text-sm font-semibold mb-1">Aantal weergaven</p>
-            <p className="text-3xl font-bold text-blue-400">
-              {car.views} {car.views === 1 ? 'weergave' : 'weergaven'}
+            <p className="text-gray-300 mb-6">
+              {car.mileage.toLocaleString('nl-NL')} km
+            </p>
+
+            <div className="flex gap-3 flex-wrap mb-6">
+              {car.doors && (
+                <span className="bg-white/10 px-4 py-2 rounded-full text-white">
+                  {car.doors} deuren
+                </span>
+              )}
+
+              {car.seats && (
+                <span className="bg-white/10 px-4 py-2 rounded-full text-white">
+                  {car.seats} zitplaatsen
+                </span>
+              )}
+            </div>
+
+            {car.color && (
+              <p className="text-gray-300 mb-4">
+                Kleur: {car.color}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-2 mb-4">
+              {car.car_tags?.map((carTag) => (
+                <span
+                  key={carTag.tag.id}
+                  className="px-3 py-1 rounded-full text-sm bg-cyan-500 text-white"
+                >
+                  {carTag.tag.name}
+                </span>
+              ))}
+            </div>
+
+            <p className="text-gray-400">
+              Kenteken: {car.license_plate}
+            </p>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <>
+        {car.image && !imageError ? (
+          <img
+            src={car.image}
+            alt={`${car.make} ${car.model}`}
+            className="w-full h-44 object-cover"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="w-full h-44 bg-white/10 flex items-center justify-center">
+            🚗
+          </div>
+        )}
+
+        <div className="p-6">
+          <h2 className="text-2xl font-bold text-white mb-1">
+            {car.make} {car.model}
+          </h2>
+
+          <p className="text-gray-300 mb-4">
+            {car.production_year}
+          </p>
+
+          <div className="mb-4">
+            <p className="text-3xl font-bold text-green-400">
+              € {Number(car.price).toLocaleString('nl-NL')}
+            </p>
+
+            <p className="text-sm text-gray-300 mt-1">
+              {car.mileage.toLocaleString('nl-NL')} km
             </p>
           </div>
 
-          {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <DetailItem label="Kenteken" value={car.license_plate} />
-            <DetailItem label="Bouwjaar" value={car.production_year?.toString() || 'N.v.t.'} />
-            <DetailItem label="Kilometerstand" value={`${car.mileage.toLocaleString('nl-NL')} km`} />
-            <DetailItem label="Kleur" value={car.color || 'N.v.t.'} />
-            <DetailItem label="Deuren" value={car.doors?.toString() || 'N.v.t.'} />
-            <DetailItem label="Zitplaatsen" value={car.seats?.toString() || 'N.v.t.'} />
-            {car.weight && <DetailItem label="Gewicht" value={`${car.weight} kg`} />}
+          <div className="flex gap-3 mb-4 flex-wrap">
+            {car.doors && (
+              <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm">
+                {car.doors} deuren
+              </span>
+            )}
+
+            {car.seats && (
+              <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm">
+                {car.seats} zitplaatsen
+              </span>
+            )}
           </div>
 
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded-lg transition-colors mt-4"
-          >
-            Sluiten
-          </button>
-        </div>
-      </div>
+          {car.color && (
+            <p className="text-sm text-gray-300 mb-2">
+              Kleur: {car.color}
+            </p>
+          )}
 
-      {/* Views Toast - toont na 10 seconden */}
-      {showViewsToast && (
-        <Toast
-          message={`${car.views} ${car.views === 1 ? 'klant heeft' : 'klanten hebben'} deze auto vandaag bekeken`}
-          autoDismiss={6000}
-          onDismiss={handleDismissToast}
-        />
-      )}
-    </div>
-  );
+          <div className="flex flex-wrap gap-2 mb-3">
+            {car.car_tags?.map((carTag) => (
+              <span
+                key={carTag.tag.id}
+                className="px-3 py-1 rounded-full text-xs bg-cyan-500 text-white"
+              >
+                {carTag.tag.name}
+              </span>
+            ))}
+          </div>
+
+          <p className="text-xs text-gray-400">
+            Kenteken: {car.license_plate}
+          </p>
+        </div>
+      </>
+    )}
+  </div>
+);
 }
 
 function DetailItem({ label, value }: { label: string; value: string }) {
