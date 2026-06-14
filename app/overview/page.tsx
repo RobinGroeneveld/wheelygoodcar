@@ -6,12 +6,14 @@ import PillNav from '../../components/PillNav';
 import Plasma from '../../components/Plasma';
 import Toast from '../../components/Toast';
 
+// Represents a single tag that can be linked to a car
 interface Tag {
   id: number;
   name: string;
   color: string;
 }
 
+// Represents a car returned from the database/API
 interface Car {
   id: number;
   license_plate: string;
@@ -31,6 +33,7 @@ interface Car {
   car_tags?: Array<{ tag: Tag }>;
 }
 
+// Navigation items displayed in the top navigation bar
 const NAV_ITEMS = [
    { label: 'Home', href: '/' },
   { label: 'Auto verkopen', href: '/sell-car' },
@@ -41,49 +44,53 @@ const NAV_ITEMS = [
   { label: 'Inloggen', href: '/login' }
 ];
 
-// Main page for displaying all cars
+// Main page that displays all available cars
 export default function CarsPage() {
 
-  // State for all cars from the database
+  // Stores all cars retrieved from the database
   const [cars, setCars] = useState<Car[]>([]);
 
-  // Load status for initial fetch
+  // Indicates whether the cars are still being loaded
   const [loading, setLoading] = useState(true);
 
-  // Error message for failed fetch
+  // Stores an error message when loading fails
   const [error, setError] = useState<string | null>(null);
   
-  // Selected car for detail view (modal)
+  // Currently selected car shown in the detail modal
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
 
-  // Search field (make, model, color, license plate)/ Zoekveld (merk, model, kleur, kenteken)
+  // Search query entered by the user
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Maximum price filter
+  // Maximum price filter selected by the user
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
 
-  // Current page number (0-indexed)
+  // Current page in the pagination
   const [currentPage, setCurrentPage] = useState(0);
 
-  // Number of cars per page
+  // Number of cars displayed per page
   const ITEMS_PER_PAGE = 10;
 
-  // All available tags
+  // All unique tags found in the retrieved cars
   const [allTags, setAllTags] = useState<Tag[]>([]);
 
-  // Selected tags for filtering
+  // Tags selected by the user for filtering
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
   // Retrieve all cars when the page loads
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const response = await fetch('/api/cars/all'); 
+        // Send request to retrieve all cars
+        const response = await fetch('/api/cars/all');
+
+        // Convert the response to JSON 
         const data = await response.json();
 
         if (Array.isArray(data)) {
           setCars(data);
-          
+
+          // Extract all unique tags from the retrieved cars
           const tagsSet = new Map<number, Tag>();
           data.forEach((car: Car) => {
             if (car.car_tags) {
@@ -92,6 +99,7 @@ export default function CarsPage() {
               });
             }
           });
+          
           setAllTags(Array.from(tagsSet.values()));
         } else {
           setError(data.error || 'Kon auto\'s niet laden.');
@@ -107,16 +115,22 @@ export default function CarsPage() {
     fetchCars();
   }, []);
 
+  // Reset pagination whenever a filter changes
   useEffect(() => {
     setCurrentPage(0);
   }, [searchQuery, maxPrice, selectedTags]);
 
+  // Opens the selected car and increments its view count
   const handleCarClick = async (car: Car) => {
     setSelectedCar(car);
     try {
+
+      // Notify the backend that this car has been viewed
       await fetch(`/api/cars/${car.id}/view`, {
         method: 'POST',
       });
+
+      // Update the view count locally
       setCars(cars.map(c => 
         c.id === car.id 
           ? { ...c, views: c.views + 1 }
@@ -128,29 +142,49 @@ export default function CarsPage() {
     }
   };
 
-  const getFilteredCars = () => {
-    return cars.filter(car => {
-      if (car.sold_at) return false; 
-    
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesSearch = 
-          car.make.toLowerCase().includes(query) ||
-          car.model.toLowerCase().includes(query) ||
-          (car.color && car.color.toLowerCase().includes(query)) ||
-          car.license_plate.toLowerCase().includes(query);
-        if (!matchesSearch) return false;
-      }
-      
-      if (maxPrice && car.price > maxPrice) return false;
-      if (selectedTags.length > 0) {
-        const carTagIds = car.car_tags?.map(ct => ct.tag.id) || [];
-        const hasSelectedTag = selectedTags.some(tagId => carTagIds.includes(tagId));
-        if (!hasSelectedTag) return false;
-      }
-      return true;
-    });
-  };
+// Filters the list of cars based on the active search criteria
+const getFilteredCars = () => {
+  return cars.filter(car => {
+
+    // Exclude cars that have already been sold
+    if (car.sold_at) return false;
+
+    // Filter by make, model, color or license plate
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+
+      const matchesSearch =
+        car.make.toLowerCase().includes(query) ||
+        car.model.toLowerCase().includes(query) ||
+        (car.color && car.color.toLowerCase().includes(query)) ||
+        car.license_plate.toLowerCase().includes(query);
+
+      // Skip this car if it does not match the search query
+      if (!matchesSearch) return false;
+    }
+
+    // Exclude cars that exceed the selected maximum price
+    if (maxPrice && car.price > maxPrice) return false;
+
+    // Filter cars by the selected tags
+    if (selectedTags.length > 0) {
+
+      // Get all tag IDs that belong to the current car
+      const carTagIds = car.car_tags?.map(ct => ct.tag.id) || [];
+
+      // Check if the car contains at least one selected tag
+      const hasSelectedTag = selectedTags.some(tagId =>
+        carTagIds.includes(tagId)
+      );
+
+      // Skip the car if none of the selected tags match
+      if (!hasSelectedTag) return false;
+    }
+
+    // Keep the car if it passed all filters
+    return true;
+  });
+};
 
     const getCarGridClass = (carId: number) => {
     const seed = (carId * 9973) % 100;
@@ -564,6 +598,84 @@ function CarCard({car,onClick,gridClass,featured}: {car: Car;onClick: () => void
     )}
   </div>
 );
+}
+
+function CarDetailModal({ car, onClose }: { car: Car; onClose: () => void }) {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div 
+        className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header met close button */}
+        <div className="sticky top-0 flex justify-between items-center p-6 border-b border-white/10 bg-slate-900/80 backdrop-blur">
+          <h2 className="text-2xl font-bold text-white">
+            {car.make} {car.model}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Image */}
+          {car.image && !imageError ? (
+            <img
+              src={car.image}
+              alt={`${car.make} ${car.model}`}
+              className="w-full h-80 object-cover rounded-2xl"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-full h-80 bg-white/10 flex items-center justify-center rounded-2xl">
+              <span className="text-8xl">🚗</span>
+            </div>
+          )}
+
+          {/* Price */}
+          <div className="bg-green-500/20 border border-green-500/50 rounded-xl p-4">
+            <p className="text-green-400 text-sm font-semibold mb-1">Prijs</p>
+            <p className="text-4xl font-bold text-green-400">
+              € {Number(car.price).toLocaleString('nl-NL')}
+            </p>
+          </div>
+
+          {/* Views Count */}
+          <div className="bg-blue-500/20 border border-blue-500/50 rounded-xl p-4">
+            <p className="text-blue-400 text-sm font-semibold mb-1">Aantal weergaven</p>
+            <p className="text-3xl font-bold text-blue-400">
+              {car.views} {car.views === 1 ? 'weergave' : 'weergaven'}
+            </p>
+          </div>
+
+          {/* Details Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <DetailItem label="Kenteken" value={car.license_plate} />
+            <DetailItem label="Bouwjaar" value={car.production_year?.toString() || 'N.v.t.'} />
+            <DetailItem label="Kilometerstand" value={`${car.mileage.toLocaleString('nl-NL')} km`} />
+            <DetailItem label="Kleur" value={car.color || 'N.v.t.'} />
+            <DetailItem label="Deuren" value={car.doors?.toString() || 'N.v.t.'} />
+            <DetailItem label="Zitplaatsen" value={car.seats?.toString() || 'N.v.t.'} />
+            {car.weight && <DetailItem label="Gewicht" value={`${car.weight} kg`} />}
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded-lg transition-colors mt-4"
+          >
+            Sluiten
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function DetailItem({ label, value }: { label: string; value: string }) {
