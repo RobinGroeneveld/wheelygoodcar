@@ -38,7 +38,7 @@ export async function GET(
   }
 }
 
-// PUT: Update a car by ID (only by the owner)
+// PUT: Update a car by ID 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -70,12 +70,18 @@ export async function PUT(
 
     if (!existingCar) {
       // Car not found
-      return NextResponse.json({ error: 'Auto niet gevonden' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Auto niet gevonden' }, 
+        { status: 404 }
+      );
     }
 
     // Only the owner can update their car
     if (existingCar.userId !== session.user.id) {
-      return NextResponse.json({ error: 'Je mag alleen je eigen auto\'s aanpassen.' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Je mag alleen je eigen auto\'s aanpassen.' }, 
+        { status: 403 }
+      );
     }
 
     // Parse the request body
@@ -92,18 +98,61 @@ export async function PUT(
     const updatedCar = await prisma.cars.update({
       where: { id: carId },
       data: {
-        license_plate: body.license_plate || existingCar.license_plate,
+        license_plate:
+          body.license_plate || existingCar.license_plate,
+
         make: body.make || existingCar.make,
         model: body.model || existingCar.model,
-        price: body.price !== undefined ? parseFloat(body.price) : existingCar.price,
-        mileage: body.mileage !== undefined ? parseInt(body.mileage) : existingCar.mileage,
-        color: body.color !== undefined ? (body.color || null) : existingCar.color,
-        doors: body.doors !== undefined ? (body.doors ? parseInt(body.doors) : null) : existingCar.doors,
+
+        price: 
+          body.price !== undefined 
+          ? parseFloat(body.price) 
+          : existingCar.price,
+
+        mileage:
+         body.mileage !== undefined
+          ? parseInt(body.mileage) 
+          : existingCar.mileage,
+
+        color: 
+          body.color !== undefined
+          ? (body.color || null) 
+          : existingCar.color,
+
+        doors:
+         body.doors !== undefined
+          ? (body.doors 
+            ? parseInt(body.doors) 
+            : null) 
+            : existingCar.doors,
+
         image: normalizeImage(body.image),
-        production_year: body.production_year !== undefined ? (body.production_year ? parseInt(body.production_year) : null) : existingCar.production_year,
-        seats: body.seats !== undefined ? (body.seats ? parseInt(body.seats) : null) : existingCar.seats,
-        weight: body.weight !== undefined ? (body.weight ? parseInt(body.weight) : null) : existingCar.weight,
-        sold_at: body.sold_at !== undefined ? body.sold_at : existingCar.sold_at,
+
+        production_year: 
+        body.production_year !== undefined 
+          ? (body.production_year 
+            ? parseInt(body.production_year) 
+            : null) 
+            : existingCar.production_year,
+
+        seats:
+         body.seats !== undefined 
+          ? (body.seats 
+            ? parseInt(body.seats) 
+            : null) 
+            : existingCar.seats,
+
+        weight:
+         body.weight !== undefined 
+            ? (body.weight 
+            ? parseInt(body.weight) 
+            : null) 
+            : existingCar.weight,
+
+        sold_at:
+          body.sold_at !== undefined 
+            ? body.sold_at 
+            : existingCar.sold_at,
       },
     });
 

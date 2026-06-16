@@ -1,3 +1,4 @@
+// Ensures that this page is executed in the browser. This is necessary because React hooks are used.
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,11 +17,14 @@ import {
 } from "recharts";
 
 export default function Dashboard() {
+  // Store the dashboard statistics
   const [data, setData] = useState<any>(null);
 
+  // Retrieve the current authentication session
   const { data: session, isLoading } = useSession();
   const router = useRouter();
 
+   // Fetch the latest dashboard data from the API
   async function fetchData() {
     try {
       const res = await fetch("/api/dashboard");
@@ -37,6 +41,7 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
+     // Restrict access to the administrator account
     if (
       !isLoading &&
       (!session ||
@@ -48,6 +53,7 @@ export default function Dashboard() {
   }, [isLoading, session, router]);
 
   useEffect(() => {
+    // Load the dashboard data initially and refresh it every 10 seconds
     fetchData();
 
     const interval = setInterval(() => {
@@ -57,6 +63,7 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  // Wait until the authentication state has been resolved
   if (isLoading) {
     return (
       <main className="p-8 text-white bg-slate-950 min-h-screen">
@@ -72,7 +79,7 @@ export default function Dashboard() {
   ) {
     return null;
   }
-
+  // Display a loading state until dashboard data has been fetched
   if (!data) {
     return (
       <main className="p-8 text-white bg-slate-950 min-h-screen">
@@ -81,6 +88,7 @@ export default function Dashboard() {
     );
   }
 
+  // Prepare the data used by the charts
   const chartData = [
     { name: "Auto's", value: data.totalCars },
     { name: "Verkocht", value: data.soldCars },
@@ -92,6 +100,7 @@ export default function Dashboard() {
     <div className="relative min-h-screen bg-slate-950 text-white">
       <header className="pt-20">
         <div className="flex justify-center gap-8 mb-8">
+          {/* Navigation menu for the dashboard */}
           <PillNav
             logo="/images/logo.png"
             items={[
@@ -124,18 +133,36 @@ export default function Dashboard() {
           Auto Dashboard
         </h1>
 
+        {/* Summary cards showing the main dashboard metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card title="Totaal auto's" value={data.totalCars} />
-          <Card title="Verkocht" value={data.soldCars} />
-          <Card title="Vandaag toegevoegd" value={data.carsToday} />
-          <Card title="Aanbieders" value={data.totalSellers} />
-          <Card title="Views totaal" value={data.totalViews} />
+          <Card 
+            title="Totaal auto's" 
+            value=
+            {data.totalCars} 
+          />
+          <Card 
+            title="Verkocht" 
+            value={data.soldCars} 
+          />
+          <Card 
+            title="Vandaag toegevoegd" 
+            value={data.carsToday} 
+          />
+          <Card 
+            title="Aanbieders" 
+            value={data.totalSellers} 
+          />
+          <Card 
+            title="Views totaal" 
+            value={data.totalViews} 
+          />
           <Card
             title="Gem. auto's per aanbieder"
             value={Number(data.avgCarsPerSeller).toFixed(2)}
           />
         </div>
 
+        {/* Display the dashboard charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[400px]">
           <div className="bg-gray-900 p-4 rounded-xl">
             <h2 className="mb-4 text-lg font-semibold">
@@ -176,6 +203,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
 
+          {/* Overview bar chart */}
           <div className="bg-gray-900 p-4 rounded-xl">
             <h2 className="mb-4 text-lg font-semibold">
               Realtime
@@ -222,6 +250,7 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Display the current sales ratio */}
         <div className="mt-8">
           <h2 className="mb-2 text-lg font-semibold">
             Verkoop ratio
@@ -240,6 +269,7 @@ export default function Dashboard() {
   );
 }
 
+// Reusable card component for displaying dashboard statistics
 function Card({
   title,
   value,
@@ -248,6 +278,7 @@ function Card({
   value: string | number;
 }) {
   return (
+    
     <div className="bg-gray-900 p-4 rounded-xl">
       <div className="text-gray-400">{title}</div>
       <div className="text-2xl font-bold">{value}</div>
@@ -255,6 +286,7 @@ function Card({
   );
 }
 
+// Reusable progress bar component for visualizing percentages
 function ProgressBar({ value }: { value: number }) {
   return (
     <div className="w-full bg-gray-800 rounded-full h-4 overflow-hidden">

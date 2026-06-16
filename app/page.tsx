@@ -9,6 +9,7 @@ import LiquidChrome from '../components/LiquidChrome';
 export default function Page() {
   return (
     <>
+      {/* Full-screen animated background layer */}
       <div className="fixed top-0 left-0 w-screen h-screen -z-10">
         <LiquidChrome
           baseColor={[0.0, 0.1, 0.1]}
@@ -22,6 +23,8 @@ export default function Page() {
 
       <div className="relative min-h-screen">
         <header className="pt-20">
+          
+          {/* Top navigation bar */}
           <div className="flex justify-center gap-8 mt-20">
             <PillNav
               logo="/images/logo.png"
@@ -30,9 +33,9 @@ export default function Page() {
                 { label: 'Auto verkopen', href: '/sell-car' },
                 { label: "Overzicht alle auto's", href: '/overview' },
                 { label: "Mijn auto's", href: '/my-cars' },
-                {label: 'admin', href: '/admin/tag-stats'},
-                {label: 'Admin Top Cars', href: '/admin-top-cars'},
-                {label: 'Admin Dashboard', href: '/admin-dashboard-overview'},
+                { label: 'admin', href: '/admin/tag-stats' },
+                { label: 'Admin Top Cars', href: '/admin-top-cars' },
+                { label: 'Admin Dashboard', href: '/admin-dashboard-overview' },
                 { label: 'Inloggen', href: '/login' }
               ]}
               activeHref="/"
@@ -45,10 +48,12 @@ export default function Page() {
               initialLoadAnimation={false}
             />
           </div>
-      
+
+          {/* Hero title section */}
           <div className="flex gap-2 text-4xl font-bold justify-center mt-20 mb-20">
             <span className='text-white'>Welkom bij</span>
 
+            {/* Animated rotating brand text */}
             <RotatingText
               texts={['Wheely Good ', 'Cars']}
               mainClassName="px-3 bg-cyan-300 text-black overflow-hidden py-1 justify-center rounded-lg"
@@ -62,7 +67,10 @@ export default function Page() {
         </header>
 
         <main>
+          {/* Featured cars section */}
           <div className="flex flex-wrap justify-center gap-8 pb-20">
+
+            {/* Car card with spotlight hover effect */}
             <SpotlightCard className="custom-spotlight-card" spotlightColor="rgba(0, 229, 255, 0.2)">
               <TiltedCard
                 imageSrc="/images/mercedes.jpg"
@@ -75,10 +83,11 @@ export default function Page() {
               />
             </SpotlightCard>
 
+            {/* Car card */}
             <SpotlightCard className="custom-spotlight-card" spotlightColor="rgba(0, 229, 255, 0.2)">
               <TiltedCard
                 imageSrc="/images/clio.avif"
-                altText="Mercedes-Benz C-Klasse"
+                altText="Renault Clio"
                 captionText="2000 Renault Clio"
                 containerHeight="380px"
                 containerWidth="380px"
@@ -87,10 +96,11 @@ export default function Page() {
               />
             </SpotlightCard>
 
+            {/* Car card (premium performance model) */}
             <SpotlightCard className="custom-spotlight-card" spotlightColor="rgba(0, 229, 255, 0.2)">
               <TiltedCard
                 imageSrc="/images/mercedes-performance.webp"
-                altText="Mercedes-Benz C-Klasse"
+                altText="Mercedes-AMG C63 S E Performance"
                 captionText="2024 Mercedes-AMG C 63 S E Performance"
                 containerHeight="380px"
                 containerWidth="380px"
@@ -98,6 +108,7 @@ export default function Page() {
                 rotateAmplitude={10}
               />
             </SpotlightCard>
+
           </div>
         </main>
       </div>

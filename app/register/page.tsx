@@ -7,6 +7,7 @@ import Link from "next/link";
 import FloatingLines from "@/components/FloatingLines";
 import PillNav from "@/components/PillNav";
 
+// Navigation items for the top menu
 const NAV_ITEMS = [
   { label: 'Home', href: '/' },
   { label: 'Auto verkopen', href: '/sell-car' },
@@ -16,14 +17,19 @@ const NAV_ITEMS = [
 ];
 
 export default function RegisterPage() {
+  // Form state
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+
+  // UI state (error handling & loading state)
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
   const router = useRouter();
 
+  // Memoized animated background to prevent unnecessary re-renders
   const floatingLinesBackground = useMemo(() => (
     <div className="fixed top-0 left-0 w-screen h-screen -z-10 pointer-events-none">
       <FloatingLines
@@ -42,39 +48,55 @@ export default function RegisterPage() {
     </div>
   ), []);
 
+  // Handle form submission and user registration
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Reset error state and show loading indicator
     setError("");
     setLoading(true);
 
     try {
+      // Attempt to register the user via authentication service
       const result = await signUp.email({
         email,
         password,
         name,
       });
-      console.log('Registratie resultaat:', result);
+
+      console.log('Registration result:', result);
+
+      // Handle API error response
       if (result?.error) {
-        const msg = result.error.message || result.error.statusText || "Registratie mislukt.";
+        const msg =
+          result.error.message ||
+          result.error.statusText ||
+          "Registratie mislukt.";
+
         setError(msg);
       } else {
+        // Redirect user to login page after successful registration
         router.push("/login");
       }
     } catch (err: any) {
+      // Handle unexpected errors
       setError(err?.message || "Registratie mislukt. Probeer het opnieuw.");
-      console.error('Registratie error:', err);
+      console.error('Registration error:', err);
     } finally {
+      // Always stop loading state
       setLoading(false);
     }
   };
 
   return (
     <>
+      {/* Background animation layer */}
       {floatingLinesBackground}
 
       <div className="min-h-screen flex flex-col">
         <header className="pt-8">
           <div className="flex justify-center">
+            {/* Top navigation */}
             <PillNav
               logo="/images/logo.png"
               items={NAV_ITEMS}
@@ -89,21 +111,28 @@ export default function RegisterPage() {
           </div>
         </header>
 
+        {/* Centered registration form */}
         <div className="flex-1 flex items-center justify-center">
           <form
             onSubmit={handleSubmit}
             className="max-w-md w-full p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-xl space-y-4"
           >
-            <h2 className="text-2xl font-bold text-white text-center">Registreren</h2>
-            
+            <h2 className="text-2xl font-bold text-white text-center">
+              Registreren
+            </h2>
+
+            {/* Error message display */}
             {error && (
               <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/30 px-3 py-2 rounded-lg">
                 {error}
               </p>
             )}
 
+            {/* Name input */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Naam</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Naam
+              </label>
               <input
                 type="text"
                 required
@@ -114,8 +143,11 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Email input */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Email
+              </label>
               <input
                 type="email"
                 required
@@ -126,8 +158,11 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Password input */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Wachtwoord</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Wachtwoord
+              </label>
               <input
                 type="password"
                 required
@@ -138,8 +173,11 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Optional phone number input */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Telefoonnummer (optioneel)</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Telefoonnummer (optioneel)
+              </label>
               <input
                 type="tel"
                 value={phoneNumber}
@@ -149,6 +187,7 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Submit button */}
             <button
               type="submit"
               disabled={loading}
@@ -157,6 +196,7 @@ export default function RegisterPage() {
               {loading ? "Bezig met registreren..." : "Registreren"}
             </button>
 
+            {/* Link to login page */}
             <p className="text-center text-gray-400 text-sm">
               Al een account?{" "}
               <Link href="/login" className="text-cyan-400 hover:text-cyan-300">
